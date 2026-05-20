@@ -1,0 +1,72 @@
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790670_1.fastq.gz SRR27790670_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790670_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790670_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790670_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790670_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 33701653 Both Surviving: 31191575 (92.55%) Forward Only Surviving: 634047 (1.88%) Reverse Only Surviving: 1585076 (4.70%) Dropped: 290955 (0.86%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790671_1.fastq.gz SRR27790671_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790671_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790671_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790671_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790671_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 42945459 Both Surviving: 40776602 (94.95%) Forward Only Surviving: 917613 (2.14%) Reverse Only Surviving: 853661 (1.99%) Dropped: 397583 (0.93%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790672_1.fastq.gz SRR27790672_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790672_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790672_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790672_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790672_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 39795280 Both Surviving: 37271331 (93.66%) Forward Only Surviving: 865346 (2.17%) Reverse Only Surviving: 1290044 (3.24%) Dropped: 368559 (0.93%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790673_1.fastq.gz SRR27790673_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790673_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790673_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790673_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790673_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 27060959 Both Surviving: 25767969 (95.22%) Forward Only Surviving: 495791 (1.83%) Reverse Only Surviving: 599780 (2.22%) Dropped: 197419 (0.73%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790674_1.fastq.gz SRR27790674_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790674_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790674_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790674_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790674_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 34792586 Both Surviving: 31746264 (91.24%) Forward Only Surviving: 761090 (2.19%) Reverse Only Surviving: 1946023 (5.59%) Dropped: 339209 (0.97%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790675_1.fastq.gz SRR27790675_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790675_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790675_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790675_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790675_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 35942414 Both Surviving: 34053592 (94.74%) Forward Only Surviving: 734133 (2.04%) Reverse Only Surviving: 878820 (2.45%) Dropped: 275869 (0.77%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790676_1.fastq.gz SRR27790676_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790676_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790676_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790676_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790676_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 40265384 Both Surviving: 38288487 (95.09%) Forward Only Surviving: 765623 (1.90%) Reverse Only Surviving: 907331 (2.25%) Dropped: 303943 (0.75%)
+TrimmomaticPE: Completed successfully
+TrimmomaticPE: Started with arguments: -threads 8 -phred33 SRR27790677_1.fastq.gz SRR27790677_2.fastq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790677_1_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790677_1_unpaired.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790677_2_trimmed.fq.gz /mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1/data/processed/SRR27790677_2_unpaired.fq.gz ILLUMINACLIP:/mnt/data/bioinfo-estadistica-2/RNAseq_2026/BioProject_2026/adapters/TruSeq3-PE-2.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:80
+Using PrefixPair: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT' and 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA'
+Using Long Clipping Sequence: 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC'
+Using Long Clipping Sequence: 'GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT'
+Using Long Clipping Sequence: 'TACACTCTTTCCCTACACGACGCTCTTCCGATCT'
+ILLUMINACLIP: Using 1 prefix pairs, 4 forward/reverse sequences, 0 forward only sequences, 0 reverse only sequences
+Input Read Pairs: 40242971 Both Surviving: 37012916 (91.97%) Forward Only Surviving: 999271 (2.48%) Reverse Only Surviving: 1768531 (4.39%) Dropped: 462253 (1.15%)
+TrimmomaticPE: Completed successfully

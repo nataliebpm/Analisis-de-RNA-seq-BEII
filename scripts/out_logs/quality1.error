@@ -1,0 +1,4 @@
+
+CondaError: Run 'conda init' before 'conda activate'
+
+/cm/local/apps/slurm/var/spool/job01311/slurm_script: line 22: multiqc: command not found
