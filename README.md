@@ -197,4 +197,5 @@ module load kallisto/0.45.0
 
 - Belluti, S., Imbriano, C., & Casarini, L. (2023). Nuclear estrogen receptors in prostate cancer: From genes to function. Cancers, 15(18), 4653. https://doi.org/10.3390/cancers15184653
 
-- Richter, C. A., Taylor, J. A., Ruhlen, R. L., Welshons, W. V., & Vom Saal, F. S. (2007). Estradiol and bisphenol A stimulate androgen receptor and estrogen receptor gene expression in fetal mouse prostate mesenchyme cells. Environmental Health Perspectives, 115(6), 902–908. https://doi.org/10.1289/ehp.9804
+- Richter, C. A., Taylor, J. A., Ruhlen, R. L., Welshons, W. V., & Vom Saal, F. S. (2007). Estradiol and bisphenol A stimulate androgen receptor and estrogen receptor gene expression in fetal mouse prostate mesenchyme cells. Environmental Health Perspectives, 115(6), 902–908. https://pmc.ncbi.nlm.nih.gov/articles/PMC1892114/
+
