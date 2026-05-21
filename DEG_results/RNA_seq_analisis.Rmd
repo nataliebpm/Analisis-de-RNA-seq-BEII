@@ -1,0 +1,709 @@
+---
+title: "Análisis de Expresión Diferencial — RNA-seq"
+subtitle: "Próstata normal: Estradiol vs Control (*Mus musculus*)"
+author: "Gutierrez Piñon Ernesto, Pineda Morán Natalie Berenice, Pinto Sanchez Alejandro, Reyes Ramírez Mónica"
+date: "`r Sys.Date()`"
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+    highlight: tango
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Mostrar el código en el output
+  message = FALSE,  # Ocultar mensajes de las librerías
+  warning = FALSE   # Ocultar advertencias
+)
+```
+
+---
+
+# Introducción
+
+Este notebook documenta el pipeline completo de análisis de RNA-seq para identificar genes **diferencialmente expresados** bajo tratamiento con **estradiol** en tejido de próstata normal de ratón (*Mus musculus*).
+
+| Parámetro | Detalle |
+|---|---|
+| **Organismo** | *Mus musculus* (GRCm39, Ensembl 115) |
+| **Tejido** | Próstata normal |
+| **Condiciones** | Estradiol (n = 4) vs Control (n = 4) |
+| **Pseudoalineador** | Kallisto |
+| **Análisis diferencial** | DESeq2 |
+| **Análisis funcional** | gProfiler2 |
+
+El flujo de trabajo sigue estas etapas:
+
+1. Carga de datos (tximport + anotación GTF)
+2. Normalización (rlog, z-score)
+3. Visualización exploratoria (PCA)
+4. Evaluación de batch effect
+5. Expresión diferencial (DESeq2 + apeglm)
+6. Volcano plot
+7. Análisis funcional (gProfiler2)
+
+---
+
+# Librerías
+
+## Librerías utilizadas
+  
+Para llevar a cabo el análisis de expresión diferencial se cargaron un total de 15 paquetes de R, cada uno con un rol específico dentro del pipeline. A continuación se describe la función de cada uno:
+  
+**Importación y procesamiento de datos**
+  
+  - **`tximport`** es el paquete encargado de importar las cuantificaciones generadas por el pseudoalineador Kallisto. Lee los archivos de abundancia (`.tsv`) de cada muestra y los agrega a nivel de gen utilizando una tabla de correspondencia transcrito–gen (`tx2gene`), produciendo una matriz de conteos lista para el análisis estadístico.
+
+  - **`GenomicFeatures`** y **`txdbmaker`** trabajan en conjunto para construir y manipular bases de datos de transcriptomas (*TxDb*) a partir de archivos de anotación en formato GTF o GFF. En este análisis se utilizaron para extraer la relación entre los identificadores de transcritos y sus genes correspondientes, información necesaria para el paso de agregación en `tximport`.
+
+  - **`generics`** provee funciones genéricas del sistema S4 de R que son requeridas como dependencia por varios paquetes del ecosistema Bioconductor.
+
+**Análisis de expresión diferencial**
+  
+  - **`DESeq2`** es el paquete central del análisis. Implementa un modelo estadístico basado en la distribución binomial negativa para modelar los datos de conteos de RNA-seq. Realiza internamente la normalización de las muestras, la estimación de la dispersión génica y aplica el test de Wald para identificar genes con expresión significativamente diferente entre condiciones.
+
+  - **`apeglm`** implementa el método de *shrinkage* adaptativo sobre los log2 Fold Change estimados por DESeq2. Este procedimiento reduce los valores extremos de LFC que suelen aparecer en genes con pocas cuentas o alta variabilidad, mejorando tanto la interpretación biológica como la visualización de los resultados.
+
+**Manipulación y transformación de datos**
+  
+  - **`tidyverse`** es una colección de paquetes diseñados para ciencia de datos en R que comparten una filosofía y sintaxis común. Incluye herramientas para manipulación (`dplyr`, `tidyr`), lectura (`readr`) y visualización (`ggplot2`) de datos en formato *tidy*. En este análisis se utilizó extensamente para filtrar, transformar y organizar los resultados.
+
+  - **`dplyr`** (incluido en `tidyverse`, también cargado explícitamente) ofrece funciones para manipulación de data frames como `filter()`, `mutate()`, `arrange()` y `pull()`, que se usaron en múltiples etapas del pipeline.
+
+  - **`reshape2`** permite reformatear estructuras de datos entre formato ancho y largo mediante las funciones `melt()` y `cast()`. Se utilizó para convertir la matriz de conteos normalizados a un formato largo compatible con `ggplot2`.
+
+**Visualización**
+  
+  - **`ggplot2`** (incluido en `tidyverse`, también cargado explícitamente) es el sistema de visualización principal del análisis. Basado en la *Grammar of Graphics*, permite construir gráficas de manera declarativa por capas. Se empleó para generar el scree plot, el PCA, el volcano plot y los barplots de enriquecimiento funcional.
+
+  - **`ggrepel`** extiende `ggplot2` añadiendo capas de texto (`geom_text_repel`, `geom_label_repel`) que ajustan automáticamente la posición de las etiquetas para evitar solapamientos, lo cual es especialmente útil en gráficas con muchos puntos anotados como el volcano plot y el scree plot.
+
+  - **`enrichplot`** proporciona funciones de visualización especializadas para resultados de análisis de enriquecimiento funcional, incluyendo gráficas de puntos (*dotplot*), redes de términos y mapas de similitud entre vías.
+
+**Análisis funcional**
+  
+  - **`gprofiler2`** es la interfaz de R para la plataforma g:Profiler. Realiza análisis de sobre-representación (ORA) contra múltiples bases de datos funcionales simultáneamente, incluyendo Gene Ontology (GO), KEGG, Reactome, WikiPathways, entre otras. Se utilizó para identificar los procesos biológicos y vías moleculares enriquecidas en los genes diferencialmente expresados.
+
+  - **`clusterProfiler`** es un paquete de Bioconductor para el análisis de enriquecimiento génico tanto por ORA como por GSEA (*Gene Set Enrichment Analysis*). Ofrece soporte para múltiples organismos y bases de datos, y se integra de manera nativa con `enrichplot` para la visualización de resultados.
+
+  - **`DOSE`** (*Disease Ontology Semantic and Enrichment analysis*) extiende las capacidades de `clusterProfiler` para realizar análisis de enriquecimiento utilizando la ontología de enfermedades (DO) y otras bases de datos relacionadas con fenotipos y enfermedades humanas.
+
+```{r librerias}
+library(tidyverse)        # Manipulación de datos y visualización
+library(tximport)         # Importar cuantificaciones de Kallisto/Salmon
+library(DESeq2)           # Análisis de expresión diferencial
+library(reshape2)         # Reformateo de data frames (melt/cast)
+library(ggrepel)          # Etiquetas sin solapamiento en ggplot2
+library(GenomicFeatures)  # Manejo de anotaciones genómicas
+library(txdbmaker)        # Construcción de bases de datos TxDb desde GTF/GFF
+library(generics)         # Funciones genéricas S4
+library(apeglm)           # Shrinkage adaptativo del log2 Fold Change
+library(gprofiler2)       # Enriquecimiento funcional (GO, KEGG, REAC, etc.)
+library(dplyr)            # Manipulación de datos
+library(ggplot2)          # Visualización de datos
+library(clusterProfiler)  # GSEA y ORA
+library(DOSE)             # Enriquecimiento de ontologías de enfermedades
+library(enrichplot)       # Visualizaciones para resultados de enriquecimiento
+```
+
+---
+
+# Fase 1: Carga de datos
+
+El primer paso es construir la tabla de correspondencia **transcrito → gen** (`tx2gene`) a partir del archivo GTF de referencia, y luego importar las cuantificaciones de Kallisto con `tximport`, que agregará los conteos a nivel de gen.
+
+## Construir tx2gene desde el GTF
+
+***3.1 Construcción de la tabla de correspondencia transcrito-gen (tx2gene)***
+
+El primer paso del análisis consiste en establecer la relación entre los transcritos del genoma de referencia y los genes a los que pertenecen. Para ello, se construye una base de datos de transcriptoma (TxDb) a partir del archivo de anotación GTF de Mus musculus (ensamblado GRCm39, versión 115 de Ensembl), utilizando la función makeTxDbFromGFF() del paquete txdbmaker. Este objeto organiza de forma estructurada toda la información genómica contenida en el GTF, incluyendo genes, transcritos, exones y sus coordenadas en el genoma.
+
+Una vez construida la base de datos, se extraen las columnas de interés mediante la función transcripts(), obteniendo una tabla que asocia cada identificador de transcrito (TXNAME) con el identificador del gen al que corresponde (GENEID). Esta tabla se convierte en un data.frame de dos columnas denominado tx2gene, que constituye el insumo indispensable para el paso de importación. Dado que la columna GENEID se encuentra anidada en una lista dentro del objeto original, se utiliza dplyr::select() para desanidarla y renombrarla correctamente en un solo paso.
+```{r txdb}
+# Crear una base de datos de transcriptomas (TxDb) a partir del GTF de Mus musculus.
+# Esta base permite extraer la relación transcrito ↔ gen de forma estructurada.
+txdb <- txdbmaker::makeTxDbFromGFF(
+  "/Users/monicareyes/Documents/Semestre4_LCG/Bioinformatica2/RNA_seq_proyect/pseudoalineamiento/gff_raton/Mus_musculus.GRCm39.115.gtf",
+  format = "gtf"
+)
+
+# Extraer nombre del transcrito (TXNAME) e ID del gen (GENEID)
+transcripts <- transcripts(txdb, columns = c("TXNAME", "GENEID"))
+
+# Construir tx2gene: tabla de dos columnas requerida por tximport para
+# sumar las abundancias de todos los transcritos de un mismo gen.
+tx2gene <- data.frame(
+  TXNAME = transcripts$TXNAME,
+  GENEID = transcripts$GENEID
+) %>%
+  dplyr::select(TXNAME, GENEID = GENEID.value)
+
+head(tx2gene)
+```
+
+## Importar cuantificaciones de Kallisto
+
+***3.2 Importación y agregación de cuantificaciones de Kallisto***
+
+Con la tabla tx2gene construida, el siguiente paso consiste en importar los archivos de cuantificación generados por Kallisto. 
+
+Kallisto produce, para cada muestra, un subdirectorio identificado con su código SRR que contiene un archivo abundance.tsv con las estimaciones de expresión a nivel de transcrito. Para localizarlos de forma automatizada, se emplea la función list.files() con búsqueda recursiva dentro del directorio de trabajo, filtrando únicamente los archivos con extensión .tsv. Posteriormente, se extrae el nombre de la carpeta contenedora de cada archivo —correspondiente al ID SRR de la muestra— mediante las funciones dirname() y basename(), y se asigna como nombre de cada elemento del vector. Este paso es crucial, ya que esos identificadores se propagarán como nombres de columna en la matriz de conteos final.
+
+La importación y agregación de los datos se realiza con la función tximport() del paquete homónimo, especificando type = "kallisto" para indicar el formato de entrada. La función utiliza la tabla tx2gene para colapsar las estimaciones de expresión de todos los transcritos pertenecientes a un mismo gen, produciendo así una matriz de conteos a nivel génico. El argumento ignoreTxVersion = TRUE es necesario para eliminar el sufijo de versión que Ensembl añade a los identificadores de transcrito (por ejemplo, .1 en ENSMUST00000070533.1), evitando así discrepancias en el mapeo con tx2gene. El objeto resultante, txi.kallisto, contiene tres matrices: counts (conteos estimados), abundance (expresión en TPM) y length (longitud efectiva por gen). Finalmente, se verifican las dimensiones de la matriz de conteos y los nombres de las muestras para confirmar que la importación se realizó de forma correcta.
+```{r tximport}
+# Localizar todos los archivos abundance.tsv generados por Kallisto.
+# Cada muestra tiene su propio subdirectorio nombrado con su ID SRR.
+ruta <- "/Users/monicareyes/Documents/Semestre4_LCG/Bioinformatica2/RNA_seq_proyect/pseudoalineamiento"
+
+archivos_tsv <- list.files(
+  path       = ruta,
+  pattern    = "\\.tsv$",
+  full.names = TRUE,
+  recursive  = TRUE
+)
+
+# Usar el nombre de la carpeta padre (ID SRR) como nombre del vector
+nombres_srr        <- basename(dirname(archivos_tsv))
+names(archivos_tsv) <- nombres_srr
+
+# Importar y agregar a nivel de gen.
+# ignoreTxVersion = TRUE elimina el sufijo de versión del transcrito (e.g. ".1")
+# para que el mapeo con tx2gene funcione correctamente.
+txi.kallisto <- tximport(
+  archivos_tsv,
+  type            = "kallisto",
+  tx2gene         = tx2gene,
+  ignoreTxVersion = TRUE
+)
+
+# Verificar dimensiones y nombres de muestras
+cat("Dimensiones de la matriz de conteos:\n")
+dim(txi.kallisto$counts)
+
+cat("\nNombres de las muestras:\n")
+colnames(txi.kallisto$counts)
+```
+
+---
+
+# Fase 2: Normalización
+
+## Metadatos y objeto DESeq2
+
+Antes de proceder con el análisis diferencial, es necesario definir los metadatos asociados a cada muestra y estructurarlos en un objeto compatible con DESeq2. Se construye un data.frame llamado metadata que contiene tres variables para las ocho muestras del experimento: el identificador de muestra (sample_ID), la condición experimental (condition) y el tejido de origen (tissue). Las muestras se dividen en dos grupos: cuatro tratadas con estradiol (SRR27790670 a SRR27790673) y cuatro controles (SRR27790674 a SRR27790677), todas provenientes de tejido de próstata normal. Los nombres de fila del data.frame se establecen como los identificadores SRR, requisito indispensable para que coincidan exactamente con los nombres de columna de la matriz de conteos importada en la fase anterior.
+
+Con los metadatos listos, se construye el objeto central del análisis mediante DESeqDataSetFromTximport(), que integra las cuantificaciones de Kallisto (txi.kallisto) con los metadatos de las muestras. El argumento design = ~condition especifica que la variable condition es el factor de interés para el análisis diferencial, es decir, que DESeq2 modelará las diferencias de expresión en función del tratamiento con estradiol respecto al control.
+```{r metadata-dds}
+# Definir los metadatos de las 8 muestras.
+# Los row names deben coincidir exactamente con colnames de la matriz de conteos.
+metadata <- data.frame(
+  sample_ID = c("SRR27790670", "SRR27790671", "SRR27790672", "SRR27790673",
+                "SRR27790674", "SRR27790675", "SRR27790676", "SRR27790677"),
+  condition = c("Estradiol", "Estradiol", "Estradiol", "Estradiol",
+                "Control",   "Control",   "Control",   "Control"),
+  tissue    = "Normal_prostate"
+)
+rownames(metadata) <- metadata$sample_ID
+
+# Crear el objeto DESeqDataSet integrando conteos + metadatos.
+# design = ~condition indica que "condition" es la variable de interés.
+dds <- DESeqDataSetFromTximport(
+  txi     = txi.kallisto,
+  colData = metadata,
+  design  = ~condition
+)
+
+dds
+```
+
+## Transformación rlog
+
+Para los análisis exploratorios como el PCA y la visualización de perfiles de expresión, los conteos crudos no son adecuados directamente debido a que su varianza aumenta con la media, lo que sesga las comparaciones entre genes de alta y baja expresión. Para corregir esto se aplica la transformación regularized log (rlog()), que estabiliza la varianza a lo largo del rango dinámico de expresión. Esta transformación es preferible sobre la alternativa vst cuando el número de réplicas es menor a 30, como es el caso en este experimento.
+
+La transformación se aplica dos veces con propósitos distintos: sobre la matriz de conteos crudos (counts) para su uso en el PCA, y directamente sobre el objeto dds para conservar la información de los metadatos y facilitar la visualización con ggplot2. En ambos casos se utiliza blind = FALSE, lo que indica que la estimación de dispersión toma en cuenta el diseño experimental; esta opción es la adecuada cuando los grupos experimentales ya son conocidos, ya que produce estimaciones más precisas que si se ignorara la estructura del diseño.
+
+Posteriormente, los datos transformados se convierten a formato largo (tidy) mediante melt(), obteniendo una fila por cada combinación gen-muestra. Este formato es el requerido por ggplot2 para graficar distribuciones de expresión. Finalmente, se integran los metadatos al data.frame resultante mediante left_join(), de modo que cada observación quede etiquetada con su condición experimental correspondiente.
+```{r rlog}
+# rlog (Regularized log): estabiliza la varianza de los conteos.
+# Se prefiere sobre vst cuando n < 30 replicados.
+# blind = FALSE usa el diseño experimental para estimar dispersión,
+# adecuado cuando los grupos ya son conocidos.
+
+counts      <- assays(dds)$counts
+rlog_result <- rlog(counts, blind = FALSE)  # Para PCA
+rlog_all    <- rlog(dds, blind = FALSE)     # Para gráficas con metadatos
+
+# Convertir a formato largo (tidy) para ggplot2
+melted_norm_counts <- data.frame(melt(assay(rlog_all)))
+colnames(melted_norm_counts) <- c("gene", "sample_ID", "normalized_counts")
+melted_norm_counts <- left_join(melted_norm_counts, metadata, by = "sample_ID")
+
+head(melted_norm_counts)
+```
+
+## Transformación Z-score
+
+Complementariamente a la transformación rlog, se calcula el Z-score por gen para estandarizar los perfiles de expresión. Esta transformación centra cada gen a media cero y lo escala a desviación estándar uno, de forma que el valor resultante indica cuántas desviaciones estándar se aleja la expresión de una muestra respecto a la media de todas las muestras para ese gen. Esto permite comparar patrones de expresión relativa entre genes con magnitudes absolutas muy distintas, y es especialmente útil para la visualización en mapas de calor (heatmaps).
+
+Antes de aplicar la transformación, se filtran los genes cuya varianza entre muestras es igual a cero, ya que estos genes presentan expresión idéntica en todas las muestras y generarían divisiones por cero al intentar escalarlos. El filtrado se realiza calculando la varianza por fila con apply() y conservando únicamente aquellas filas con varianza distinta de cero. La estandarización se lleva a cabo con la función scale(), que opera por columnas de forma predeterminada; dado que en este caso se desea escalar por filas —es decir, por gen a través de las muestras— se transpone la matriz con t() antes y después de aplicar scale(). El resultado es una matriz zscore_mat lista para ser utilizada en visualizaciones comparativas de expresión génica.
+```{r zscore}
+# El z-score estandariza cada gen a media = 0 y SD = 1,
+# permitiendo comparar patrones de expresión relativa entre muestras.
+
+# Filtrar genes con varianza = 0 para evitar divisiones por cero en scale()
+var_non_zero    <- apply(counts, 1, var) != 0
+filtered_counts <- counts[var_non_zero, ]
+
+# scale() opera por columnas; con t() se escala por filas (genes)
+zscores    <- t(scale(t(filtered_counts)))
+zscore_mat <- as.matrix(zscores)
+
+cat("Dimensiones tras filtrar genes de varianza cero:\n")
+dim(zscores)
+```
+
+---
+
+# Fase 3: Análisis de Componentes Principales (PCA)
+
+El PCA permite explorar la estructura de los datos antes del análisis diferencial: ¿se separan los grupos?, ¿hay outliers?, ¿existe algún efecto de lote?
+
+## Calcular PCA
+
+El Análisis de Componentes Principales (PCA) se aplica como paso exploratorio previo al análisis diferencial, con el objetivo de evaluar la estructura global de los datos: verificar si las muestras se agrupan de acuerdo con su condición experimental, detectar posibles valores atípicos (outliers) e identificar efectos de lote no deseados que pudieran confundir el análisis posterior.Para ello, se toma la matriz de conteos transformados con rlog y se calcula el PCA mediante la función prcomp(). 
+
+Dado que esta función espera que las filas representen observaciones y las columnas variables, la matriz se transpone antes de pasarla como argumento, de modo que cada muestra ocupe una fila y cada gen una columna. La varianza explicada por cada componente principal se obtiene elevando al cuadrado las desviaciones estándar (sdev) reportadas por prcomp() y dividiendo cada valor entre la suma total, expresando el resultado como porcentaje. Este cálculo permite cuantificar qué fracción de la variabilidad total de los datos captura cada componente, siendo los primeros componentes los más informativos.
+```{r pca-calc}
+mat <- as.matrix(rlog_result)  # Filas = genes, columnas = muestras
+pc  <- prcomp(t(mat))          # prcomp espera filas = muestras → transponer
+
+pc$sample <- metadata$sample_ID
+
+# Varianza explicada por cada componente principal:
+# sdev² / suma(sdev²) × 100
+variance_explained <- pc$sdev^2 / sum(pc$sdev^2) * 100
+
+cat("Varianza explicada por los primeros 4 PCs:\n")
+round(variance_explained[1:4], 2)
+```
+
+## Scree plot
+
+El scree plot es una representación gráfica de la varianza explicada por cada componente principal en orden descendente. Su propósito es determinar cuántos componentes son suficientes para capturar la mayor parte de la variabilidad del experimento, identificando visualmente un "codo" en la curva a partir del cual la contribución de los componentes adicionales se vuelve marginal.
+
+Para construirlo, se genera un data.frame que contiene el índice de cada componente, su porcentaje de varianza explicada y una etiqueta que combina ambos valores para facilitar la interpretación. La gráfica se construye con ggplot2, representando cada componente como un punto conectado por una línea. Los cuatro primeros componentes se anotan con etiquetas mediante geom_text_repel(), función que ajusta automáticamente la posición del texto para evitar solapamientos, resaltándolos en rojo negrilla por ser los de mayor relevancia interpretativa.
+```{r scree-plot, fig.width=7, fig.height=5}
+# El scree plot muestra cuánta varianza captura cada PC.
+# Un "codo" pronunciado indica cuántos PCs son informativos.
+df <- data.frame(
+  Componente = seq_along(variance_explained),
+  Varianza   = variance_explained,
+  Etiqueta   = paste0("PC", seq_along(variance_explained), ": ",
+                      round(variance_explained, 2), "%")
+)
+
+ggplot(df, aes(x = Componente, y = Varianza)) +
+  geom_point(color = "cadetblue4", size = 3) +
+  geom_line(color = "cadetblue4") +
+  geom_text_repel(
+    data          = df[1:4, ],
+    aes(label     = Etiqueta),
+    size          = 5,
+    box.padding   = unit(0.35, "lines"),
+    point.padding = unit(0.3,  "lines"),
+    color         = "darkred",
+    fontface      = "bold"
+  ) +
+  labs(
+    title = "Scree plot: varianza explicada por PCA",
+    x     = "Componente principal",
+    y     = "Porcentaje de varianza explicada"
+  ) +
+  theme_minimal()
+```
+
+## Biplot PC1 vs PC2
+
+El biplot de PC1 contra PC2 es la visualización central del PCA, ya que proyecta cada muestra en el espacio definido por los dos componentes que explican la mayor proporción de varianza. Una separación clara entre los grupos en este espacio indica que la condición experimental —en este caso el tratamiento con estradiol frente al control— constituye la principal fuente de variación en los datos, lo cual es un resultado deseable antes de proceder con el análisis diferencial.
+
+Para construir la gráfica, se combina la matriz de coordenadas de las muestras en PC1 y PC2 (extraída de pc$x) con los metadatos del experimento mediante cbind(), obteniendo un data.frame donde cada fila es una muestra anotada con su condición. Las muestras se grafican como puntos coloreados según su grupo —rosa intenso para Control y azul cielo para Estradiol— y se añaden elipses de confianza con stat_ellipse() para facilitar la identificación visual de los grupos. Los ejes se etiquetan con el porcentaje de varianza explicada de cada componente, interpolado directamente desde el vector variance_explained mediante sprintf(), de modo que la figura sea autoexplicativa sin necesidad de consultar valores externos.
+```{r pca-plot, fig.width=7, fig.height=5}
+# Una separación clara entre grupos en PC1/PC2 indica que la condición
+# (estradiol vs control) es la principal fuente de variación en los datos.
+pca_df <- cbind(pc$x[, 1:2], metadata) %>% as.data.frame()
+
+condition_colors <- c("Control" = "deeppink", "Estradiol" = "deepskyblue")
+
+ggplot(pca_df, aes(x = PC1, y = PC2, color = condition)) +
+  stat_ellipse() +
+  geom_point(size = 3.5) +
+  scale_color_manual(values = condition_colors) +
+  labs(
+    title = "PCA — Normal prostate: Control vs Estradiol",
+    x     = sprintf("PC1 (%.2f%%)", variance_explained[1]),
+    y     = sprintf("PC2 (%.2f%%)", variance_explained[2]),
+    color = "Condición"
+  ) +
+  theme_light() +
+  theme(
+    text         = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text  = element_text(size = 12)
+  )
+```
+
+---
+
+# Fase 4: Corrección de batch effect
+
+> **Decisión:** No se realizó corrección de batch effect. El PCA muestra una separación clara de las muestras por condición en PC1, sin agrupamiento evidente por lote. Por lo tanto, la variación técnica no domina sobre la variación biológica de interés.
+
+Tras la inspección visual del PCA, se evaluó la necesidad de aplicar una corrección por efecto de lote. El efecto de lote se refiere a la variación técnica introducida por factores ajenos al diseño experimental, como el día de procesamiento de las muestras, el operador o el equipo utilizado, y puede enmascarar las diferencias biológicas de interés si no se controla adecuadamente.
+
+En este caso, el biplot de PC1 vs PC2 mostró una separación clara y consistente de las muestras según su condición experimental —estradiol vs control— sobre el primer componente principal, sin que se observara ningún agrupamiento alternativo atribuible a fuentes de variación técnica. Dado que la condición biológica de interés domina la estructura de variación en los datos, se determinó que no era necesario aplicar ningún método de corrección de lote. Proceder con la corrección en ausencia de un efecto de lote detectable podría eliminar variación biológica legítima, reduciendo la potencia del análisis diferencial posterior. Por lo tanto, se continuó el análisis con los datos normalizados sin modificaciones adicionales.
+
+---
+
+# Fase 5: Análisis de Expresión Diferencial
+
+## Configurar y ejecutar DESeq2
+
+Antes de ejecutar el análisis diferencial, se establece el nivel de referencia del factor condition mediante la función relevel(), designando al grupo Control como denominador del cociente de expresión. Esta decisión determina la dirección de interpretación del log2FoldChange (LFC) a lo largo de todo el análisis: valores positivos indican genes con mayor expresión en el grupo Estradiol respecto al Control, mientras que valores negativos indican lo contrario. 
+
+Sin este paso, R asignaría el nivel de referencia de forma alfabética, lo que podría invertir la interpretación de los resultados.La función central DESeq() ejecuta internamente una serie de pasos estadísticos de forma secuencial. En primer lugar, estima los size factors de cada muestra mediante el método de la mediana de ratios, que corrige las diferencias en la profundidad de secuenciación entre muestras. A continuación, estima la dispersión génica, es decir, la variabilidad biológica de cada gen entre réplicas, aplicando contracción (shrinkage) hacia una curva de tendencia global para estabilizar las estimaciones en genes con pocos conteos. Con estos parámetros, ajusta un modelo lineal generalizado de distribución binomial negativa para cada gen y, finalmente, aplica el test de Wald para evaluar si el LFC de cada gen es significativamente distinto de cero. La función resultsNames() permite verificar los coeficientes disponibles en el modelo ajustado, que serán utilizados en pasos posteriores.
+```{r deseq2-run}
+# relevel(): define "Control" como el denominador del log2FoldChange.
+# Interpretación: LFC = log2(Estradiol / Control)
+#   LFC > 0 → gen más expresado en Estradiol
+#   LFC < 0 → gen menos expresado en Estradiol
+dds$type <- relevel(dds$condition, ref = "Control")
+levels(dds$type)
+
+# DESeq() realiza internamente:
+#   1. Estimación de size factors (normalización por la mediana de ratios)
+#   2. Estimación de la dispersión génica
+#   3. Ajuste del modelo GLM binomial negativo
+#   4. Test de Wald para evaluar la significancia del LFC
+dds <- DESeq(dds)
+
+# Ver los coeficientes disponibles para extracción de resultados
+resultsNames(dds)
+```
+
+## Extraer resultados
+
+Los resultados del análisis diferencial se extraen con la función results(), especificando mediante el argumento contrast que el numerador de la comparación es el grupo Estradiol y el denominador es el grupo Control. 
+
+El argumento alpha = 0.05 establece el umbral de tasa de falsos descubrimientos (FDR) utilizado para el resumen estadístico que imprime summary(), aunque no filtra la tabla de resultados en sí. La tabla resultante contiene una fila por gen con seis columnas de interés: baseMean, que representa el nivel de expresión promedio normalizado entre todas las muestras; log2FoldChange, que cuantifica el cambio de expresión en escala logarítmica; lfcSE, que es el error estándar asociado a dicha estimación; stat, que corresponde al estadístico de Wald calculado como el cociente entre el LFC y su error estándar; pvalue, que es el p-valor individual del test por gen; y padj, que es el p-valor corregido por el método de Benjamini-Hochberg para controlar la tasa de falsos descubrimientos a lo largo de las pruebas múltiples realizadas.
+```{r deseq2-results}
+# contrast: numerador = Estradiol, denominador = Control
+# alpha:    umbral de FDR para el resumen (no filtra la tabla)
+results_deseq <- results(
+  dds,
+  contrast = c("condition", "Estradiol", "Control"),
+  alpha    = 0.05
+)
+
+summary(results_deseq)
+```
+
+> **Columnas de la tabla de resultados:**
+>
+> | Columna | Descripción |
+> |---|---|
+> | `baseMean` | Media normalizada entre todos los replicados (proxy del nivel de expresión global) |
+> | `log2FoldChange` | Cambio de expresión en escala log2 (Estradiol / Control) |
+> | `lfcSE` | Error estándar del log2FoldChange |
+> | `stat` | Estadístico de Wald = log2FoldChange / lfcSE |
+> | `pvalue` | P-valor del test de Wald por gen |
+> | `padj` | P-valor ajustado por Benjamini-Hochberg (controla FDR) |
+
+## Shrinkage del log2FoldChange
+
+Un problema frecuente en el análisis de expresión diferencial con muestras de tamaño reducido es que genes con pocos conteos o alta variabilidad entre réplicas pueden presentar estimaciones de LFC extremas simplemente por azar, sin que esto refleje una diferencia biológica real. 
+
+Para mitigar este efecto, se aplica la función lfcShrink() con el método apeglm, que contrae los LFC extremos hacia cero de forma proporcional a la incertidumbre de su estimación: genes con poca información (baja expresión o alta dispersión) reciben una mayor contracción, mientras que genes con estimaciones robustas se ven poco afectados. Este procedimiento mejora la interpretabilidad biológica de los resultados y produce visualizaciones más informativas, particularmente en el volcano plot. El argumento coef debe coincidir exactamente con uno de los coeficientes reportados por resultsNames(), en este caso "condition_Estradiol_vs_Control".
+```{r shrinkage}
+# lfcShrink() con apeglm reduce los LFC de genes con pocas cuentas o alta
+# variabilidad (que pueden tener LFC extremos por azar), mejorando la
+# interpretabilidad biológica y la visualización en el volcano plot.
+# coef debe coincidir con uno de los nombres en resultsNames(dds).
+res_shrink <- lfcShrink(
+  dds,
+  coef = "condition_Estradiol_vs_Control",
+  type = "apeglm"
+)
+
+summary(res_shrink)
+```
+
+## Tabla de resultados final
+
+Los resultados con LFC contraído se convierten en un data.frame y se les aplican dos transformaciones finales: los identificadores de gen, que en el objeto original ocupan los nombres de fila, se trasladan a una columna explícita mediante rownames_to_column(), y los genes que DESeq2 marcó con valores NA en su p-valor ajustado —correspondientes a genes filtrados automáticamente por bajo conteo o alta proporción de ceros— se eliminan con drop_na(). La tabla resultante, ordenada por p-valor ajustado ascendente, muestra en sus primeras filas los genes con mayor significancia estadística en la comparación Estradiol vs Control. Finalmente, se reporta el número total de genes que alcanzan el umbral de significancia de padj < 0.05, que constituye el conjunto de genes diferencialmente expresados sobre el que se centrarán los análisis posteriores.
+```{r results-df}
+results_df <- as.data.frame(res_shrink) %>%
+  tibble::rownames_to_column("gene") %>%  # IDs de gen como columna
+  drop_na()                               # Eliminar genes filtrados (NA)
+
+# Top 6 genes más significativos
+head(results_df[order(results_df$padj), ])
+
+cat("\nGenes con padj < 0.05:", sum(results_df$padj < 0.05, na.rm = TRUE))
+```
+
+---
+
+# Fase 6: Volcano Plot
+
+## Clasificar genes
+
+Para visualizar los resultados del análisis diferencial, se clasifica cada gen en una de tres categorías según dos criterios simultáneos: significancia estadística y magnitud del cambio de expresión. El umbral estadístico utilizado es un p-valor ajustado menor a 0.05, que garantiza un control de la tasa de falsos descubrimientos al 5%. El umbral de magnitud es un valor absoluto del log2FoldChange mayor a 1, lo que equivale a un cambio de expresión de al menos dos veces entre condiciones. La combinación de ambos criterios es una práctica estándar en transcriptómica, ya que un gen puede ser estadísticamente significativo pero con un cambio biológicamente irrelevante, o viceversa.La clasificación se implementa con mutate() y case_when(), asignando la categoría "Up" a los genes sobreexpresados en la condición Estradiol respecto al Control, "Down" a los subexpresados, y "NS" (not significant) a todos los demás. La distribución de genes en cada categoría se verifica con table(), proporcionando un conteo rápido de cuántos genes caen en cada grupo.
+```{r clasificar-genes}
+# Umbrales:
+#   |log2FC| > 1  → cambio de al menos 2× (fold change ≥ 2)
+#   padj < 0.05   → FDR controlado al 5%
+results_df <- results_df %>%
+  mutate(
+    significance = case_when(
+      padj < 0.05 & log2FoldChange >  1 ~ "Up",    # Sobreexpresado en Estradiol (≥ 2×)
+      padj < 0.05 & log2FoldChange < -1 ~ "Down",  # Subexpresado en Estradiol (≤ 0.5×)
+      TRUE                               ~ "NS"     # No significativo
+    )
+  )
+
+table(results_df$significance)
+```
+
+## Top 10 genes más significativos
+
+Con el fin de destacar los genes más relevantes en la visualización sin saturar la gráfica con nombres, se seleccionan los diez genes diferencialmente expresados con mayor significancia estadística. Para ello se filtran los genes clasificados como "Up" o "Down", se ordenan por p-valor ajustado de forma ascendente y se toman los primeros diez. A cada uno se le asigna un número de rango del 1 al 10 mediante mutate(), que actuará como etiqueta en el volcano plot. Este enfoque permite identificar los genes de interés en la figura y consultarlos en la tabla adjunta sin necesidad de escribir identificadores completos sobre los puntos de la gráfica.
+```{r top-genes}
+# Los genes se anotan con un número (rank) en el volcano plot para facilitar
+# su identificación sin saturar la gráfica con nombres de gen.
+top_genes <- results_df %>%
+  filter(significance != "NS") %>%
+  arrange(padj) %>%
+  head(10) %>%
+  mutate(rank = 1:10)
+
+top_genes[, c("rank", "gene", "log2FoldChange", "padj", "significance")]
+```
+
+## Graficar
+
+El volcano plot es la visualización estándar para resumir los resultados de un análisis de expresión diferencial. En él, cada punto representa un gen: el eje horizontal indica la magnitud del cambio de expresión en escala log2 y el eje vertical indica la significancia estadística como el negativo del logaritmo en base 10 del p-valor ajustado, de modo que los genes más significativos aparecen en la parte superior de la gráfica. Los genes se colorean según su categoría: naranja oscuro para los sobreexpresados, azul claro para los subexpresados y gris para los no significativos, facilitando la interpretación visual inmediata.
+
+Los umbrales utilizados para la clasificación se representan explícitamente en la gráfica mediante líneas punteadas: dos líneas verticales en log2FC = ±1 y una línea horizontal en −log10(0.05), delimitando el cuadrante de genes considerados diferencialmente expresados. Los diez genes más significativos se anotan con su número de rango mediante geom_text_repel(), que ajusta automáticamente la posición de las etiquetas para evitar solapamientos entre sí y con los puntos subyacentes. El eje vertical se limita a 200 unidades con coord_cartesian() para evitar que genes con significancias extremadamente altas distorsionen la escala y dificulten la visualización del resto de los genes. El resultado es una figura que integra en un solo panel la magnitud, la dirección y la significancia estadística de los cambios de expresión génica observados en la comparación Estradiol vs Control en tejido de próstata normal.
+```{r volcano-plot, fig.width=8, fig.height=6}
+volcano_colors <- c(
+  "Up"   = "darkorange",  # Sobreexpresados
+  "Down" = "cadetblue3",  # Subexpresados
+  "NS"   = "gray70"       # No significativos
+)
+
+ggplot(results_df, aes(x = log2FoldChange, y = -log10(padj), color = significance)) +
+  geom_point(size = 1.5, alpha = 0.7) +
+  # Anotar los Top 10 con su ranking; ggrepel evita solapamiento de etiquetas
+  geom_text_repel(
+    data        = top_genes,
+    aes(label   = rank),
+    size        = 4,
+    color       = "black",
+    fontface    = "bold",
+    box.padding = 0.5
+  ) +
+  scale_color_manual(values = volcano_colors) +
+  # Líneas punteadas: umbrales de |LFC| = 1 y padj = 0.05
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "gray40") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray40") +
+  coord_cartesian(ylim = c(0, 200)) +   # Limitar eje Y para evitar escala excesiva
+  labs(
+    title    = "Volcano plot — Estradiol vs Control",
+    subtitle = "Normal prostate",
+    x        = "log2 Fold Change",
+    y        = "-log10 (p-adj)",
+    color    = "Expresión"
+  ) +
+  theme_light() +
+  theme(
+    text         = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text  = element_text(size = 12)
+  )
+```
+
+---
+
+# Fase 7: Análisis Funcional con gProfiler2
+
+## Separar listas de genes
+
+Una vez identificados los genes diferencialmente expresados, el siguiente paso consiste en interpretar su significado biológico mediante análisis de enriquecimiento funcional. Para ello, se construyen dos listas independientes: una con los genes sobreexpresados en la condición Estradiol ("Up") y otra con los subexpresados ("Down"). 
+
+En ambos casos, los genes se ordenan primero por p-valor ajustado de forma ascendente y, en caso de empate, por el valor absoluto del log2FoldChange de forma descendente. Este ordenamiento no es arbitrario: gProfiler2 puede interpretar las listas como consultas ordenadas, asignando mayor peso biológico a los genes que aparecen al inicio, por lo que colocar primero los genes más significativos y con mayor cambio de expresión mejora la sensibilidad del análisis.
+```{r gene-lists}
+# Los genes se ordenan por padj (ascendente) y luego por |LFC| (descendente).
+# Este orden es relevante porque gProfiler2 con ordered_query = TRUE
+# interpreta que los primeros genes son los más informativos biológicamente.
+
+up_genes <- results_df %>%
+  filter(significance == "Up") %>%
+  arrange(padj, desc(abs(log2FoldChange))) %>%
+  pull(gene)
+
+down_genes <- results_df %>%
+  filter(significance == "Down") %>%
+  arrange(padj, desc(abs(log2FoldChange))) %>%
+  pull(gene)
+
+cat("Genes sobreexpresados (Up):  ", length(up_genes))
+cat("\nGenes subexpresados (Down):", length(down_genes))
+```
+
+## Enriquecimiento funcional
+
+El análisis de enriquecimiento se realiza mediante la función gost() del paquete gProfiler2, que implementa el método de Análisis de Sobre-Representación (ORA, Over-Representation Analysis). Este método evalúa si los genes de cada lista aparecen con mayor frecuencia de la esperada por azar en términos funcionales anotados en diversas bases de datos de referencia. En este análisis se consultan simultáneamente nueve fuentes: Gene Ontology de Procesos Biológicos (GO:BP), KEGG, Reactome (REAC), factores de transcripción (TF), microRNAs (MIRNA), complejos proteicos (CORUM), Human Phenotype Ontology (HP), Human Protein Atlas (HPA) y WikiPathways (WP), lo que proporciona una visión funcional amplia y complementaria.
+
+Las dos listas se analizan de forma independiente gracias al argumento multi_query = FALSE, mientras que ordered_query = TRUE activa la interpretación del orden de prioridad descrito anteriormente. La corrección por pruebas múltiples se realiza mediante FDR con un umbral de significancia de 0.05. El argumento evcodes = TRUE es especialmente útil ya que añade a los resultados los identificadores de los genes que explican cada término enriquecido, facilitando la trazabilidad y la interpretación posterior.
+```{r gprofiler, message=FALSE}
+# gost() realiza ORA (Over-Representation Analysis) contra múltiples bases:
+#   GO:BP → Procesos biológicos       REAC  → Reactome
+#   KEGG  → Rutas metabólicas         TF    → Factores de transcripción
+#   MIRNA → microRNAs                 CORUM → Complejos proteicos
+#   HP    → Human Phenotype Ontology  HPA   → Human Protein Atlas
+#   WP    → WikiPathways
+
+sources_db <- c("GO:BP", "KEGG", "REAC", "TF", "MIRNA", "CORUM", "HP", "HPA", "WP")
+
+multi_gp <- gost(
+  list("Upregulated"   = up_genes,
+       "Downregulated" = down_genes),
+  correction_method = "fdr",       # Corrección múltiple por FDR
+  user_threshold    = 0.05,        # Umbral de significancia
+  multi_query       = FALSE,       # Analizar cada lista por separado
+  ordered_query     = TRUE,        # Respetar el orden de prioridad de los genes
+  sources           = sources_db,
+  evcodes           = TRUE,        # Incluir los genes que explican el enriquecimiento
+  organism          = "mmusculus"
+)
+```
+
+## Manhattan plot
+
+El Manhattan plot generado por gostplot() ofrece una vista panorámica de todos los términos funcionales significativos encontrados en ambas listas. En este gráfico, el eje horizontal agrupa los términos por base de datos de origen y el eje vertical representa la significancia estadística como el negativo del logaritmo en base 10 del p-valor, de modo que los términos más significativos aparecen en la parte superior. Esta visualización permite identificar rápidamente qué categorías funcionales concentran el mayor enriquecimiento y si existen diferencias en el perfil funcional entre los genes sobreexpresados y los subexpresados.
+```{r manhattan, fig.width=10, fig.height=6}
+# Muestra todos los términos significativos ordenados por fuente (base de datos),
+# con el -log10(p-valor) en el eje Y. Permite ver qué categorías funcionales
+# están más enriquecidas globalmente.
+gostp1 <- gostplot(multi_gp, interactive = FALSE)
+gostp1
+```
+
+## Preparar datos para barplots
+
+Para construir visualizaciones más detalladas y personalizadas, los resultados de gost() se extraen como data.frame y se restructuran en un objeto bar_data que concentra las variables de interés: el nombre del término funcional (term_name), la lista de origen (query), el tamaño del término en la base de datos (term_size), el p-valor ajustado por FDR, la base de datos de procedencia (source), el identificador del término (term_id) y los genes que sustentan el enriquecimiento (intersection). Adicionalmente, se define un data.frame de paleta de colores (Category_colors) que asigna un color distinto a cada base de datos funcional, facilitando la diferenciación visual entre categorías en las gráficas de barras.
+```{r barplot-prep}
+# Paleta de colores por base de datos funcional
+Category_colors <- data.frame(
+  category = c("GO:BP", "GO:CC", "GO:MF", "KEGG",
+               "REAC", "TF", "MIRNA", "HPA", "CORUM", "HP", "WP"),
+  label    = c("Biological Process", "Cellular Component", "Molecular Function", "KEGG",
+               "REAC", "TF", "MIRNA", "HPA", "CORUM", "HP", "WP"),
+  colors   = c("red", "darkslategray2", "orchid2", "darkolivegreen3",
+               "mediumpurple2", "orange", "yellow2", "sienna", "royalblue2", "seagreen", "slategray")
+)
+
+# Convertir resultados de gProfiler2 a data frame
+gost_query <- as.data.frame(multi_gp$result)
+
+bar_data <- data.frame(
+  term      = as.factor(gost_query$term_name),  # Nombre del término funcional
+  condition = gost_query$query,                  # Lista de origen (Up / Down)
+  count     = gost_query$term_size,              # Tamaño del término en la base de datos
+  p.adjust  = gost_query$p_value,               # p-valor ajustado por FDR
+  category  = as.factor(gost_query$source),      # Base de datos de origen
+  go_id     = as.factor(gost_query$term_id),     # ID del término (e.g. GO:0006355)
+  geneNames = gost_query$intersection            # Genes que explican el enriquecimiento
+)
+```
+
+## Barplot — Genes subexpresados (Down)
+
+Para los genes subexpresados, se filtran los resultados correspondientes a la lista "Downregulated" y se seleccionan los 40 términos más significativos. Estos se ordenan en dos pasos: primero por p-valor ajustado para garantizar que los términos más relevantes queden al frente, y luego por categoría funcional para agrupar visualmente los términos de una misma base de datos. 
+
+-La significancia de cada término se transforma a escala −log10(padj) para que el eje horizontal de la gráfica sea más intuitivo: valores más altos corresponden a mayor significancia. Cada barra se colorea según la base de datos de origen, utilizando la paleta definida previamente, y el valor numérico de −log10(padj) se imprime al final de cada barra para facilitar la lectura exacta de los valores sin necesidad de consultar el eje.
+```{r barplot-down, fig.width=10, fig.height=9}
+bar_data_down <- subset(bar_data, condition == "Downregulated")
+
+# Seleccionar los 40 términos más significativos y ordenar:
+#   1. Por p-valor (más significativos al frente)
+#   2. Por categoría (agrupa visualmente las bases de datos)
+bar_data_down         <- head(bar_data_down[order(bar_data_down$p.adjust), ], 40)
+bar_data_down_ordered <- bar_data_down[order(bar_data_down$p.adjust), ]
+bar_data_down_ordered <- bar_data_down_ordered[order(bar_data_down_ordered$category), ]
+
+# -log10(p-valor): mayor valor = más significativo
+bar_data_down_ordered$p.val <- round(-log10(bar_data_down_ordered$p.adjust), 2)
+bar_data_down_ordered$num   <- seq(1:nrow(bar_data_down_ordered))
+
+bar_data_down_ordered_mod <- left_join(bar_data_down_ordered, Category_colors, by = "category")
+
+ggplot(bar_data_down_ordered_mod,
+       aes(p.val, reorder(term, -num), fill = category)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = p.val), color = "black", hjust = 0, size = 2.2,
+            position = position_dodge(0)) +
+  labs(title = "Enriquecimiento funcional — Genes subexpresados",
+       x = "-log10(p-value)", y = NULL) +
+  scale_fill_manual(name   = "Category",
+                    labels = unique(bar_data_down_ordered_mod$label),
+                    values = unique(bar_data_down_ordered_mod$colors)) +
+  theme_classic() +
+  theme(legend.position  = "right",
+        axis.title.y     = element_blank(),
+        strip.text.x     = element_text(size = 11, face = "bold"),
+        strip.background = element_blank())
+```
+
+## Barplot — Genes sobreexpresados (Up)
+
+El barplot de genes sobreexpresados sigue exactamente la misma lógica y estructura que el de genes subexpresados, aplicado en este caso a la lista "Upregulated". Se seleccionan igualmente los 40 términos más significativos, se ordenan por p-valor y categoría, se transforma la significancia a escala logarítmica y se representan con la misma paleta de colores por base de datos. La consistencia en el diseño de ambas figuras permite compararlas directamente, identificando diferencias y similitudes en el perfil funcional de los genes activados e inhibidos por el tratamiento con estradiol en tejido de próstata normal.
+```{r barplot-up, fig.width=10, fig.height=9}
+bar_data_up <- subset(bar_data, condition == "Upregulated")
+
+bar_data_up         <- head(bar_data_up[order(bar_data_up$p.adjust), ], 40)
+bar_data_up_ordered <- bar_data_up[order(bar_data_up$p.adjust), ]
+bar_data_up_ordered <- bar_data_up_ordered[order(bar_data_up_ordered$category), ]
+bar_data_up_ordered$p.val <- round(-log10(bar_data_up_ordered$p.adjust), 2)
+bar_data_up_ordered$num   <- seq(1:nrow(bar_data_up_ordered))
+
+bar_data_up_ordered_mod <- left_join(bar_data_up_ordered, Category_colors, by = "category")
+
+ggplot(bar_data_up_ordered_mod,
+       aes(p.val, reorder(term, -num), fill = category)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = p.val), color = "black", hjust = 0, size = 2.2,
+            position = position_dodge(0)) +
+  labs(title = "Enriquecimiento funcional — Genes sobreexpresados",
+       x = "-log10(p-value)", y = NULL) +
+  scale_fill_manual(name   = "Category",
+                    labels = unique(bar_data_up_ordered_mod$label),
+                    values = unique(bar_data_up_ordered_mod$colors)) +
+  theme_classic() +
+  theme(legend.position  = "right",
+        axis.title.y     = element_blank(),
+        strip.text.x     = element_text(size = 11, face = "bold"),
+        strip.background = element_blank())
+```
+
+---
+
+# Información de sesión
+
+```{r session-info}
+sessionInfo()
+```
