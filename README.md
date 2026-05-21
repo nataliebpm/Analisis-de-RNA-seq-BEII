@@ -100,8 +100,9 @@ Se analizaron 4 réplicas biológicas de tejido de próstata de ratones para cad
 
 - `README.md` 
 
-- `Final_Bioproject_Report`: Reporte renderizado en formato html
+- `Final_Bioproject_Report`: reporte final en formato Rmd
 
+- `index.html`: reporte renderizado en formato html
 
 ### 📁 Estructura del Repositorio en el Cluster
 
