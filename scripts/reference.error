@@ -1,5 +1,0 @@
-/cm/local/apps/slurm/var/spool/job01442/slurm_script: line 14: input:: command not found
-/cm/local/apps/slurm/var/spool/job01442/slurm_script: line 15: output:: command not found
-mkdir: cannot create directory ‘’: No such file or directory
-
-Error: FASTA file not found input/Mus_musculus.GRCm39.transcripts.fa.gz
