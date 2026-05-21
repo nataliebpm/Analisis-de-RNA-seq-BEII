@@ -164,7 +164,7 @@ Después se crearon diferentes repositorios de acuerdo a los análisis realizado
 
 	- `transcripts.idx`: índice para hacer el pseudoalineamiento de cada muestra
 
-7. `DEG_results`: 
+7. `DEG_results`: contiene las matrices de conteos y los archivos de formato necesarios para el análisis de expresión diferencial de genes, así como los gráficos generados a partir de dicho análisis.
 
 8. `TRIM_results`: resultado de las lecturas que pasaron el filtrado de calidad junto con su pareja. Ambas lecturas del par siguen juntas y sincronizadas; este directorio contiene la misma información que el ubicado en `data/processed/` solo que se añadió a la estructura de directorios como uno independiente
 

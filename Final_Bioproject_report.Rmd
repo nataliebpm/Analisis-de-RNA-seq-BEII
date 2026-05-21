@@ -28,12 +28,14 @@ knitr::opts_chunk$set(
 -   **Bioproyecto**: PRJNA1071175
 -   **Especie**: Mus musculus
 -   **Método de selección**: Poly-A
--   **Número de transcriptomas**: 8
+-   **Número de transcriptomas**: 30
 -   **Número de réplicas biológicas**: 3-4 réplicas por condición
 -   **Secuenciador empleado**: Illumina NovaSeq 6000
 -   **Distribución de las muestras**: 4 controles y 4 réplicas por tratamiento
 -   **Profundidad de secuenciación**: 20 a 42.1 M reads (post-trimming)
 -   **Tamaño de las lecturas**: 100 bp
+
+Los transcriptomas que se usarán son los siguientes:
 
 | SRA Run ID | GSM ID | Condición | Tratamiento | Réplica | Tipo de lectura |
 |------------|------------|------------|------------|------------|------------|
@@ -66,39 +68,41 @@ El análisis de RNA-seq es una técnica que sirve para identificar y cuantificar
 
 ## Calidad de secuencias
 
-Mediante MultiQC se analizaron las secuencias con y sin adaptadores, obteniendo los siguientes resultados:
+Mediante MultiQC se analizaron las secuencias con y sin adaptadores, obteniendo los siguientes resultados.
 
-### Con adaptadores
+### Antes del trimming
 
--   **Calidad de las secuencias**: Las bases tienen una calidad superior a 30, además, aunque no se observe en la gráfica todas las muestras estan en Phred30, en zona verde teniendo una profundidad de lectura en un rango de 27M a 42M secuencias.
--   **Contenido de %GC**: La mayoría de las muestras están entre \~50-55% pero hay un pico secundario.
--   **Duplicación de secuencias**: La mayoría de las muestras tienen niveles bajos de duplicación, aunque algunas muestras presentan niveles más altos, lo que podría indicar la presencia de secuencias altamente repetitivas o problemas en la preparación de la biblioteca.
--   **Contenido de adaptadores**: El contenido de adaptadores es bajo en general, aunque algunas muestras presentan un aumento en las últimas posiciones, lo que podría indicar la presencia de adaptadores residuales que no fueron completamente eliminados durante el proceso de limpieza de los datos.
+-   **Calidad de las secuencias**: Las bases tienen una calidad superior a 30, además, aunque no se observe en la gráfica todas las muestras estan en Phred30, en zona verde teniendo una profundidad de lectura en un rango de 27M a 42M secuencias. (Figura 1.1 y 1.2).
+-   **Contenido de %GC**: La mayoría de las muestras están entre \~50-55% pero hay un pico secundario. (Figura 1.3).
+-   **Duplicación de secuencias**: La mayoría de las muestras tienen niveles bajos de duplicación, aunque algunas muestras presentan niveles más altos, lo que podría indicar la presencia de secuencias altamente repetitivas o problemas en la preparación de la biblioteca. (Figura 1.4).
+-   **Contenido de adaptadores**: El contenido de adaptadores es bajo en general, aunque algunas muestras presentan un aumento en las últimas posiciones, lo que podría indicar la presencia de adaptadores residuales que no fueron completamente eliminados durante el proceso de limpieza de los datos. (Figura 1.5).
 
-![Calidad de la secuencias](imagenes/fastqc_per_base_sequence_quality_plot.png) ![Calidad de la secuencias](imagenes/fastqc_per_sequence_quality_scores_plot.png)
+![Figura 1.1](imagenes/fastqc_per_base_sequence_quality_plot.png) 
 
-![Variación en porcentajes de GC en las muestras](imagenes/fastqc_per_sequence_gc_content_plot.png)
+![Figura 1.2](imagenes/fastqc_per_sequence_quality_scores_plot.png)
 
-![Niveles de duplicación](imagenes/fastqc_sequence_duplication_levels_plot.png)
+![Figura 1.3](imagenes/fastqc_per_sequence_gc_content_plot.png)
 
-![Adaptadores en las muestras](imagenes/fastqc_adapter_content_plot.png)
+![Figura 1.4](imagenes/fastqc_sequence_duplication_levels_plot.png)
+
+![Figura 1.5](imagenes/fastqc_adapter_content_plot.png)
 
 El analisis nos dice que los datos tienen buena calidad para continuar con el procesamiento. Las secuencias tienen buena calidad, con un valor de Phred mayor a 30. El contenido de GC parece elevado para ser un ratón, pero como estamos tomando en cuenta únicamente el ARN esto podría no ser un error, sin embargo, existe un pico secundario que podría indicar contaminación. Existe un nivel relativamente bajo de duplicación, aunque depende de la muestra, con algunas mostrando un nivel considerable, lo cual podría indicar la presencia de secuencias altamente repetidas o problemas en la elaboración de la biblioteca. El porcentaje de adaptadores es bastante bajo y se mantiene en el rango seguro, aunque las muestran aumentan su porcentaje mientras se acercan al final.
 
-### Sin adaptadores
+### Después del trimming
 
--   Calidad de secuencias: Al igual que en los datos crudos, las bases tienen una calidad superior a 30, con una profundidad de lectura en un rango de 25M a 40M secuencias.
--   Contenido de %GC: Comparando con los datos crudos, la distribución se ve mucho más suave, eliminando el pico secundario, cercana a una normal, aunque se sigue con un alto contenido de GC.
--   Duplicación de secuencias: Sigue existiendo la misma estructura general, con duplicaciones bajas en la mayoría de las muestras, aunque algunas muestras siguen presentando niveles más altos de duplicación.
--   Contenido de adaptadores: El contenido de adapatadores no se muestra en gráfica, probablemente porque se eliminaron completamente durante el proceso de limpieza de los datos, lo que indica que el proceso de eliminación de adaptadores fue efectivo.
+-   **Calidad de secuencias**: Al igual que en los datos crudos, las bases tienen una calidad superior a 30, con una profundidad de lectura en un rango de 25M a 40M secuencias. (Figura 2.1 y 2.2).
+-   **Contenido de %GC**: Comparando con los datos crudos, la distribución se ve mucho más suave, eliminando el pico secundario, cercana a una normal, aunque se sigue con un alto contenido de GC. (Figura 2.3).
+-   **Duplicación de secuencias**: Sigue existiendo la misma estructura general, con duplicaciones bajas en la mayoría de las muestras, aunque algunas muestras siguen presentando niveles más altos de duplicación. (Figura 2.4)
+-   **Contenido de adaptadores**: El contenido de adapatadores no se muestra en gráfica, probablemente porque se eliminaron completamente durante el proceso de limpieza de los datos, lo que indica que el proceso de eliminación de adaptadores fue efectivo. 
 
-![Calidad de la secuencias](imagenes/fastqc_per_base_sequence_quality_plot2.png)
+![Figura 2.1](imagenes/fastqc_per_base_sequence_quality_plot2.png)
 
-![Calidad de la secuencias](imagenes/fastqc_per_sequence_quality_scores_plot2.png)
+![Figura 2.2](imagenes/fastqc_per_sequence_quality_scores_plot2.png)
 
-![Variación en porcentajes de GC en las muestras](imagenes/fastqc_per_sequence_gc_content_plot2.png)
+![Figura 2.3](imagenes/fastqc_per_sequence_gc_content_plot2.png)
 
-![Niveles de duplicación](imagenes/fastqc_sequence_duplication_levels_plot2.png)
+![Figura 2.4](imagenes/fastqc_sequence_duplication_levels_plot2.png)
 
 El análisis de los datos procesados muestra que la calidad de las secuencias se mantiene alta, con valores de Phred superiores a 30. La distribución del contenido de GC se ha suavizado, eliminando el pico secundario presente en los datos crudos, aunque sigue siendo relativamente alto. Los niveles de duplicación siguen siendo bajos en la mayoría de las muestras, aunque algunas muestras presentan niveles más altos, lo que podría indicar la presencia de secuencias altamente repetitivas o problemas en la preparación de la biblioteca. El contenido de adaptadores parece haber sido eliminado efectivamente, ya que no se observa en las gráficas. El tamaño de los reads en los datos crudos eran de 101 bp en todos, en cambio, después del trimming se observa que la mayoría de los reads siguen conservando su longitud pero muy pocos redujeron en tamaño, llegando a tener reads de hasta de 80 bp.
 
@@ -199,15 +203,16 @@ zscore_mat <- as.matrix(zscores)
 
 La matriz de z-scores rescato **23, 738 genes y 8 muestras**. Este número es menor que los **36, 111** genes del objeto `dds` por que el filtrado por varianza opera sopbre las cuentas crudas, eliminando todos los genes que tienen el mismo valor en las 8 muestras. Este filtrado afecto unicamente a la matri de z-scores y no al análisis diferencias posterior, que continua siendo sobre el objeto `dds` con los 36, 111 genes.
 
-Siguiendo con el flujo de trabajo, lo siguiente que se realizó fue un screen plot que muestra los primeros cuatro componentes principales que explican el 83.18% de la varianza total, el PC1 contribuye el 36.47%, el PC2 el 24.4%, el PC3 el 14.25% y el PC4 el 8.06%. La caída clara pronuncida tras el PC1 y el PC2, confirma que la mayor parte de los datos son explicadas/capturadas con las primeras dos componentes.
+Siguiendo con el flujo de trabajo, lo siguiente que se realizó fue un screen plot (Figura 3.1) que muestra los primeros cuatro componentes principales que explican el 83.18% de la varianza total, el PC1 contribuye el 36.47%, el PC2 el 24.4%, el PC3 el 14.25% y el PC4 el 8.06%. La caída clara pronuncida tras el PC1 y el PC2, confirma que la mayor parte de los datos son explicadas/capturadas con las primeras dos componentes.
 
 
-![Screen Plot](imagenes/scree_plot.jpeg)
+![Figura 3.1](imagenes/scree_plot.jpeg)
 
 
-La visualización del PCA en el plano PC1-PC2 revela una separación completa y sin solapamientos entre el grupo Control y el grupo Estradiol. Las cuatro muestras de cada condición forman grupos internamiento compactos, con elipses de confianza estadística no solapadas. Esta clara seperación indica ue la principal fuente de variación transcriptómoca es el tratamiento con estradiol y no factores técnicos. Y dado que los grupos se separan de forma limpia y las muestras presentan alta consistencia interna, **no se realizó correción de batch effect**, ya que no hay evidencia de confusores técnicos que justifique dicho paso.
+La visualización del PCA en el plano PC1-PC2 (Figura 3.2) revela una separación completa y sin solapamientos entre el grupo Control y el grupo Estradiol. Las cuatro muestras de cada condición forman grupos internamiento compactos, con elipses de confianza estadística no solapadas. Esta clara seperación indica ue la principal fuente de variación transcriptómoca es el tratamiento con estradiol y no factores técnicos. Y dado que los grupos se separan de forma limpia y las muestras presentan alta consistencia interna, **no se realizó correción de batch effect**, ya que no hay evidencia de confusores técnicos que justifique dicho paso.
 
-![PCA](imagenes/PCA.jpeg)
+![Figura 3.2](imagenes/PCA.jpeg)
+
 -----------------------------------------------------------------------
 
 ## Análisis de expresión diferencial
@@ -224,14 +229,12 @@ Para el análisis final se aplicó además un umbral de |log₂FC| > 1 (cambio m
 | Subexpresados (Down) | 1,114 | 88 |
 
 
-
-
 Al dividir 213 entre 88 se obtiene una relación Up/Down de aproximadamente 2:4:1, lo que signfica que por cada gen que estadriol apaga, activa cerca de 2.4, Esto tiene sentido biológica:ERα (receptor de estrógeno alfa) es una proteína que, al unirse al estradiol, migra al núcleo y activa la expresión de genes, por lo que es esperable que la respuesta sea predominantemente de activación.
 
-El volcano plot permite er esto visualmente de forma muy clara: la nube naranja (genes sobrexpresados) es notablement más grande y tiene puntos más altos en el eje Y que la nube azul (genes subexpresados). Cuanto más arriba está un punto, más significativo estadísticamente es ese gen.
+El volcano plot (Figura 4.1) permite ver esto visualmente de forma muy clara: la nube naranja (genes sobrexpresados) es notablement más grande y tiene puntos más altos en el eje Y que la nube azul (genes subexpresados). Cuanto más arriba está un punto, más significativo estadísticamente es ese gen.
 
 
-![Volcano Plot](imagenes/Volcano_plot.jpeg)
+![Figura 4.1](imagenes/Volcano_plot.jpeg)
 
 
 
@@ -257,13 +260,14 @@ El gen con el padj más extremo (rango 1, ENSMUSG00000018339) presenta simultám
 
 
 ----------------------------------------------------------------------
+
 ## Análisis funcional
 
 El análisis de enriquesimiento funcional se realizó con **gProfiler2** sobre la lista de genes sobreexpresados y subexpresados por separado, consultado múltiples bases de datos (GO:BP, KEGG, REAC, TF, MIRNA, entre otras) con correción de multiples pruebas. Los resultados se visualizan en gráficas de barras ordenadas por −log₁₀(p-valor), mostrando los 40 términos más significativos para cada dirección.
 
-El Manhatan plot muestra los resultados del enriquecimiento funcional sepados por direcció de expresión y base de datos. La línea horizontal naramja represenya el umbral de significancia; los puntos por encima de ella son términos significativos.
+El Manhatan plot (Figura 5.1) muestra los resultados del enriquecimiento funcional sepados por direcció de expresión y base de datos. La línea horizontal naramja represenya el umbral de significancia; los puntos por encima de ella son términos significativos.
 
-![Manhattan Plot](imagenes/Manhattan_plot.jpeg)
+![Figura 5.1](imagenes/Manhattan_plot.jpeg)
 
 Para los **genes subexpresados (panel superior)**, únicamente aparecen 2 puntos signficativos, ambos en la categoría GO:BP, con valores −log₁₀(padj) ≈ 2. El resto de las bases de datos (KEGG, REAC, TF, CORUM, HP, WP) no muestran ningún término por encima del umbral, lo que confirma que la represión ejercida por el estradiol es muy específica y límitada funcionalmente.
 
@@ -271,14 +275,17 @@ Para los **genes subexpresados (panel superior)**, únicamente aparecen 2 puntos
 Para los genes sobreexpresados (panel inferior), hay una nube densa de puntos naranja en GO:BP con valores entre 1 y 3, además de varios puntos azules significativos en TF y un punto en WP. Ningún termino supera −log₁₀(padj) > 3 . Juntos (la dispersión de categoria y el −log₁₀(padj) > 3) confirman que la respuesta al estradiol no se concentra en una sola ruta, sino que activa un panorama que involucra procesos biologicos, factores de transcripción, etc.
 
 
-### Genes subexpresados
-El análisis de los 88 genes subexpresados por estradiol arrojó que unicamente dos términos GO:BP son significativos: lipid transport y lipid localization. Esto sugeriría que al no haber enriquesimiento en otras categorías, la acción represora del estradiol en la próstata normal es selectiva y se concentre en la regulación del movimiento y redistribución del metabolismo lipídico como consecuencia de la activación simultánea de ruts de síntesis de esteroles mediada por el receptor de estrógeno.
 
-![GO Enrichment](imagenes/GO_subexpresados.jpeg)
+### Genes subexpresados
+
+El análisis de los 88 genes subexpresados por estradiol arrojó que unicamente dos términos GO:BP son significativos (Figura 5.2): lipid transport y lipid localization. Esto sugeriría que al no haber enriquesimiento en otras categorías, la acción represora del estradiol en la próstata normal es selectiva y se concentre en la regulación del movimiento y redistribución del metabolismo lipídico como consecuencia de la activación simultánea de ruts de síntesis de esteroles mediada por el receptor de estrógeno.
+
+![Figura 5.2](imagenes/GO_subexpresados.jpeg)
+
 
 ### Genes sobreexpresados
 
-El análisis de 213 genes sobreexpresados idenficó 40 términos GO:BP significstivos, con valores −log₁₀(p) de 2.02 y 2.66. Los terminos con mayor significancia estadísca (−log₁₀(p) = 2.66) se agrupan en cuatro categorías biológicas:
+El análisis de 213 genes sobreexpresados idenficó 40 términos GO:BP significstivos, con valores −log₁₀(p) de 2.02 y 2.66. Los terminos con mayor significancia estadísca (−log₁₀(p) = 2.66) se agrupan en cuatro categorías biológicas (Figura 5.3):
 
 1. **Detoxificación y respuesta a sustancias tóxicas**
 
@@ -302,7 +309,7 @@ En conjunto, el perfil de enriquesimiento de los genes sobreexpreados es bastant
 
 
 
-![GO Enrichment](imagenes/GO_sobreexpresados.jpeg)
+![Figura 5.3](imagenes/GO_sobreexpresados.jpeg)
 
 
 -----------------------------------------------------------------------
@@ -313,3 +320,12 @@ Los resultados en conjunto muestran que el tratamiento con estradiol induce en l
 
 
 Finalmente, en el contexto tumoral los estrógenos imitan parcialmente la respuesta transcripcional androgénica y activan vías específicas vinculadas a proliferación y reprogramación metabólica de manera dependiente de ERα, lo que sugiere un patrón que contrasta con la respuesta más moderada observada en el tejido normal del presente análisis. Esto sugiere que la carcinogénesis amplifica y redirige la señalización estrogénica hacia programas oncogénicos, siendo la alteración temprana del metabolismo lipídico observada en próstata normal un posible precursor molecular de dicha reprogramación, en concordancia con lo reportado por Lafront et al. (2024).
+
+
+# Referencias
+
+- Belluti, S., Imbriano, C., & Casarini, L. (2023). Nuclear Estrogen Receptors in Prostate Cancer: From Genes to Function. Cancers, 15(18), 4653. https://doi.org/10.3390/cancers15184653
+- Dobbs, R.W., Malhotra, N.R., Greenwald, D.T. et al. Estrogens and prostate cancer. Prostate Cancer Prostatic Dis 22, 185–194 (2019). https://doi.org/10.1038/s41391-018-0081-6
+- Lafront C, Germain L, Audet-Walsh É. Bulk mRNA-seq data from wild-type and prostate cancer-developing mice reveal a reprogramming of the estrogen and androgen responses after carcinogenesis. Data Brief. 2024 Aug 28;57:110870. doi: 10.1016/j.dib.2024.110870. PMID: 39290430; PMCID: PMC11405909
+- Ramírez-de-Arellano A, Pereira-Suárez AL, Rico-Fuentes C, López-Pulido EI, Villegas-Pineda JC, Sierra-Diaz E. Distribution and Effects of Estrogen Receptors in Prostate Cancer: Associated Molecular Mechanisms. Front Endocrinol (Lausanne). 2022 Jan 11;12:811578. doi: 10.3389/fendo.2021.811578. PMID: 35087479; PMCID: PMC8786725.
+
