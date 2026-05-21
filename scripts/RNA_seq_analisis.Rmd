@@ -1,1 +1,315 @@
+---
+title: "Análisis de RNAseq: “Bulk mRNA-seq data from wild-type and prostate cancer-developing
+  mice reveal a reprogramming of the estrogen and androgen responses after carcinogenesis”"
+author: Reyes Ramírez Mónica, Pineda Morán Natalie Berenice, Pinto Sánchez Alejandro,
+  Gutiérrez Piñón Ernesto
+date: "2026-05-20"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+    highlight: tango
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Mostrar el código en el output
+  message = FALSE,  # Ocultar mensajes de las librerías
+  warning = FALSE   # Ocultar advertencias
+)
+```
+
+------------------------------------------------------------------------
+
+# Descripción de los datos
+
+-   **Bioproyecto**: PRJNA1071175
+-   **Especie**: Mus musculus
+-   **Método de selección**: Poly-A
+-   **Número de transcriptomas**: 8
+-   **Número de réplicas biológicas**: 3-4 réplicas por condición
+-   **Secuenciador empleado**: Illumina NovaSeq 6000
+-   **Distribución de las muestras**: 4 controles y 4 réplicas por tratamiento
+-   **Profundidad de secuenciación**: 20 a 42.1 M reads (post-trimming)
+-   **Tamaño de las lecturas**: 100 bp
+
+| SRA Run ID | GSM ID | Condición | Tratamiento | Réplica | Tipo de lectura |
+|------------|------------|------------|------------|------------|------------|
+| SRR27790670 | GSM8047494 | Próstata normal | Estradiol | Tratamiento 1 | Paired-end |
+| SRR27790671 | GSM8047493 | Próstata normal | Estradiol | Tratamiento 2 | Paired-end |
+| SRR27790672 | GSM8047492 | Próstata normal | Estradiol | Tratamiento 3 | Paired-end |
+| SRR27790673 | GSM8047491 | Próstata normal | Estradiol | Tratamiento 4 | Paired-end |
+| SRR27790674 | GSM8047490 | Próstata normal | Vehículo (control) | Control 1 | Paired-end |
+| SRR27790675 | GSM8047488 | Próstata normal | Vehículo (control) | Control 2 | Paired-end |
+| SRR27790676 | GSM8047486 | Próstata normal | Vehículo (control) | Control 3 | Paired-end |
+| SRR27790677 | GSM8047484 | Próstata normal | Vehículo (control) | Control 4 | Paired-end |
+
+**Artículo científico**: Lafront C, Germain L, Audet-Walsh É. Bulk mRNA-seq data from wild-type and prostate cancer-developing mice reveal a reprogramming of the estrogen and androgen responses after carcinogenesis. Data Brief. 2024 Aug 28;57:110870. doi: 10.1016/j.dib.2024.110870. PMID: 39290430; PMCID: PMC11405909.
+
+------------------------------------------------------------------------
+
+# Abstract
+
+El análisis de RNA-seq es una técnica que sirve para identificar y cuantificar el contenido de RNA en una muestra. Una de los principales beneficios de este análisis es que podemos identificar la expresión génica bajo diferentes condiciones, lo cual es muy útil a la hora de probar tratamientos o identificar las causas de enfermedades. Nuestro análisis de RNA-seq fue elaborado a partir de muestras obtenidas de un estudio que trataba de observar los efectos de las hormonas sexuales en la expresión génica de la próstata. Se tomaron 4 muestras control y 4 muestras con tratamiento de estradiol (una hormona sexual) realizadas en el estudio en ratones. Luego de realizar el control de calidad, se obtuvo que las muestras eran viables para continuar. Se realizó el trimming con el programa Trimmomatic y, luego de realizar otro control de calidad, se indexaron las muestras y se realizó el alineamiento usando Kallisto. El análisis mostró una clara separación entre el grupo control y el grupo estradiol, lo que demuestra que la variación en el transcriptoma es producto del tratamiento. El grupo estradiol mostró una gran cantidad de genes sobreexpresados, con estos principalmente ligados a la respuesta hormonal, el desarrollo del tejido, el metabolismo de grasas y esteroles, y la protección frente al estrés.
+
+------------------------------------------------------------------------
+
+# Diagrama de flujo del análisis bioinformático
+
+![](imagenes/Diagrama_Flujo_Bioinfo.png)
+
+------------------------------------------------------------------------
+
+# Resultados y discusión
+
+## Calidad de secuencias
+
+Mediante MultiQC se analizaron las secuencias con y sin adaptadores, obteniendo los siguientes resultados:
+
+### Con adaptadores
+
+-   **Calidad de las secuencias**: Las bases tienen una calidad superior a 30, además, aunque no se observe en la gráfica todas las muestras estan en Phred30, en zona verde teniendo una profundidad de lectura en un rango de 27M a 42M secuencias.
+-   **Contenido de %GC**: La mayoría de las muestras están entre \~50-55% pero hay un pico secundario.
+-   **Duplicación de secuencias**: La mayoría de las muestras tienen niveles bajos de duplicación, aunque algunas muestras presentan niveles más altos, lo que podría indicar la presencia de secuencias altamente repetitivas o problemas en la preparación de la biblioteca.
+-   **Contenido de adaptadores**: El contenido de adaptadores es bajo en general, aunque algunas muestras presentan un aumento en las últimas posiciones, lo que podría indicar la presencia de adaptadores residuales que no fueron completamente eliminados durante el proceso de limpieza de los datos.
+
+![Calidad de la secuencias](imagenes/fastqc_per_base_sequence_quality_plot.png) ![Calidad de la secuencias](imagenes/fastqc_per_sequence_quality_scores_plot.png)
+
+![Variación en porcentajes de GC en las muestras](imagenes/fastqc_per_sequence_gc_content_plot.png)
+
+![Niveles de duplicación](imagenes/fastqc_sequence_duplication_levels_plot.png)
+
+![Adaptadores en las muestras](imagenes/fastqc_adapter_content_plot.png)
+
+El analisis nos dice que los datos tienen buena calidad para continuar con el procesamiento. Las secuencias tienen buena calidad, con un valor de Phred mayor a 30. El contenido de GC parece elevado para ser un ratón, pero como estamos tomando en cuenta únicamente el ARN esto podría no ser un error, sin embargo, existe un pico secundario que podría indicar contaminación. Existe un nivel relativamente bajo de duplicación, aunque depende de la muestra, con algunas mostrando un nivel considerable, lo cual podría indicar la presencia de secuencias altamente repetidas o problemas en la elaboración de la biblioteca. El porcentaje de adaptadores es bastante bajo y se mantiene en el rango seguro, aunque las muestran aumentan su porcentaje mientras se acercan al final.
+
+### Sin adaptadores
+
+-   Calidad de secuencias: Al igual que en los datos crudos, las bases tienen una calidad superior a 30, con una profundidad de lectura en un rango de 25M a 40M secuencias.
+-   Contenido de %GC: Comparando con los datos crudos, la distribución se ve mucho más suave, eliminando el pico secundario, cercana a una normal, aunque se sigue con un alto contenido de GC.
+-   Duplicación de secuencias: Sigue existiendo la misma estructura general, con duplicaciones bajas en la mayoría de las muestras, aunque algunas muestras siguen presentando niveles más altos de duplicación.
+-   Contenido de adaptadores: El contenido de adapatadores no se muestra en gráfica, probablemente porque se eliminaron completamente durante el proceso de limpieza de los datos, lo que indica que el proceso de eliminación de adaptadores fue efectivo.
+
+![Calidad de la secuencias](imagenes/fastqc_per_base_sequence_quality_plot2.png)
+
+![Calidad de la secuencias](imagenes/fastqc_per_sequence_quality_scores_plot2.png)
+
+![Variación en porcentajes de GC en las muestras](imagenes/fastqc_per_sequence_gc_content_plot2.png)
+
+![Niveles de duplicación](imagenes/fastqc_sequence_duplication_levels_plot2.png)
+
+El análisis de los datos procesados muestra que la calidad de las secuencias se mantiene alta, con valores de Phred superiores a 30. La distribución del contenido de GC se ha suavizado, eliminando el pico secundario presente en los datos crudos, aunque sigue siendo relativamente alto. Los niveles de duplicación siguen siendo bajos en la mayoría de las muestras, aunque algunas muestras presentan niveles más altos, lo que podría indicar la presencia de secuencias altamente repetitivas o problemas en la preparación de la biblioteca. El contenido de adaptadores parece haber sido eliminado efectivamente, ya que no se observa en las gráficas. El tamaño de los reads en los datos crudos eran de 101 bp en todos, en cambio, después del trimming se observa que la mayoría de los reads siguen conservando su longitud pero muy pocos redujeron en tamaño, llegando a tener reads de hasta de 80 bp.
+
+------------------------------------------------------------------------
+
+## Importando los datos en R
+
+La importación de los datos de pseudoalineamiento se realizó con el paquete `tximport`, leyendo los archivos `.tsv` de abundancias generados por Kallisto. Previo a la importación, se construyó la tabla de correspondencia transcrito-gen (`tx2gene`) a partir del GTF de referencia GRCm39.115, utilizando `txdbmaker::makeTxDbFromGFF` para extraer los identificadores de transcrito y gen. Esta tabla permite que `tximport` colapse directamente las estimaciones a nivel de transcrito a nivel de gen (con `ignoreTxVersion = TRUE` para compatibilizar los IDs entre Kallisto y el GTF).
+
+```
+txdb <- txdbmaker::makeTxDbFromGFF(
+  "/Users/monicareyes/Documents/Semestre4_LCG/Bioinformatica2/RNA_seq_proyect/pseudoalineamiento/gff_raton/Mus_musculus.GRCm39.115.gtf",format = "gtf")
+
+# Extraer la información de transcritos con sus nombres y genes
+transcripts <- transcripts(txdb, columns=c("TXNAME", "GENEID"))
+
+# Construir el data.frame con las columnas deseadas
+tx2gene <- data.frame(
+  TXNAME  = transcripts$TXNAME,
+  GENEID  = transcripts$GENEID
+) %>% 
+  # Seleccionar columnas de interes y renombrar columna GENEID
+  dplyr::select(TXNAME, GENEID = GENEID.value)
+
+
+
+ruta <- "/Users/monicareyes/Documents/Semestre4_LCG/Bioinformatica2/RNA_seq_proyect/pseudoalineamiento"
+archivos_tsv <- list.files(path = ruta,
+                           pattern = "\\.tsv$",
+                           full.names = TRUE,
+                           recursive = TRUE)
+
+nombres_srr <- basename(dirname(archivos_tsv))
+# colocarle nombres
+names(archivos_tsv) <- nombres_srr
+# importar archivo
+txi.kallisto <- tximport(archivos_tsv, type = "kallisto", tx2gene = tx2gene, ignoreTxVersion=TRUE)
+
+#Dimensions de los datos
+dim(txi.kallisto$counts)
+
+# Ver los nombres de las muestras
+colnames(txi.kallisto$counts)
+```
+
+Al ejecutar `dim(txi.kallisto$counts)` obtenemos una matriz de **36, 111 genes ** y **8 muestras** correspondientes a los cuatro replicados del grupo Estradiol (SRR27790670–SRR27790673) y los cuatro del grupo Control (SRR27790674–SRR27790677). 
+
+
+-----------------------------------------------------------------------
+
+## Normalización y análisis de componentes principales (PCA)
+
+Para el análisis de expresión diferencia se creó el objeto `DESeq2` a partir de `txi.kallisto` incorporando los metadatos de las muestras con la condición como variable de diseño. Los datos se normalizaron con la transformación **rlog**, ya que estailiza la varianza de los genes de baja expresión. Adicionalmente, se calculó la matriz de **z-scores** sobre las cuentas crudas filtradas (eliminando genes con varianza = 0), esto como recurso para las visualizaciones complementarías.
+
+```
+#Definir los metadatos 
+
+metadata <- data.frame(
+  sample_ID = c("SRR27790670", "SRR27790671", "SRR27790672", "SRR27790673",
+                "SRR27790674", "SRR27790675", "SRR27790676", "SRR27790677"),
+  condition = c("Estradiol", "Estradiol", "Estradiol", "Estradiol",
+                "Control",   "Control",   "Control",   "Control"),
+  tissue = "Normal_prostate"
+)
+
+rownames(metadata) <- metadata$sample_ID
+
+#Crear el objeto DEseq2
+dds <- DESeqDataSetFromTximport(
+  txi     = txi.kallisto,
+  colData = metadata,
+  design  = ~condition
+)
+
+#Cuentas crudas y rlog sobre la matriz para hacer el PCA
+counts <- assays(dds)$counts
+rlog_result <- rlog(counts, blind = FALSE)
+
+# Normalizamos los datos con rlog (porque son pocos datos)
+rlog_all <- rlog(dds, blind = FALSE)
+melted_norm_counts <- data.frame(melt(assay(rlog_all)))
+colnames(melted_norm_counts) <- c("gene", "sample_ID", "normalized_counts")
+melted_norm_counts <- left_join(melted_norm_counts, metadata, by = "sample_ID")
+
+# Z-score transformation 
+
+#Filtrar los genes que tengan poca varianza
+var_non_zero <- apply(counts, 1, var) !=0 
+filtered_counts <- counts[var_non_zero, ]
+
+zscores <- t(scale(t(filtered_counts)))
+#Dimensiones
+dim(zscores)
+
+#guardar la matriz
+zscore_mat <- as.matrix(zscores)
+```
+
+La matriz de z-scores rescato **23, 738 genes y 8 muestras**. Este número es menor que los **36, 111** genes del objeto `dds` por que el filtrado por varianza opera sopbre las cuentas crudas, eliminando todos los genes que tienen el mismo valor en las 8 muestras. Este filtrado afecto unicamente a la matri de z-scores y no al análisis diferencias posterior, que continua siendo sobre el objeto `dds` con los 36, 111 genes.
+
+Siguiendo con el flujo de trabajo, lo siguiente que se realizó fue un screen plot que muestra los primeros cuatro componentes principales que explican el 83.18% de la varianza total, el PC1 contribuye el 36.47%, el PC2 el 24.4%, el PC3 el 14.25% y el PC4 el 8.06%. La caída clara pronuncida tras el PC1 y el PC2, confirma que la mayor parte de los datos son explicadas/capturadas con las primeras dos componentes.
+
+
+![Screen Plot](imagenes/scree_plot.jpeg)
+
+
+La visualización del PCA en el plano PC1-PC2 revela una separación completa y sin solapamientos entre el grupo Control y el grupo Estradiol. Las cuatro muestras de cada condición forman grupos internamiento compactos, con elipses de confianza estadística no solapadas. Esta clara seperación indica ue la principal fuente de variación transcriptómoca es el tratamiento con estradiol y no factores técnicos. Y dado que los grupos se separan de forma limpia y las muestras presentan alta consistencia interna, **no se realizó correción de batch effect**, ya que no hay evidencia de confusores técnicos que justifique dicho paso.
+
+![PCA](imagenes/PCA.jpeg)
+-----------------------------------------------------------------------
+
+## Análisis de expresión diferencial
+
+El análisis de expresión diferencial se realizó con DESeq2, estableciendo el grupo control como nivel de referencia para el contraste Estradiol vs Control. Para reducir el ruido en genes de baja expresión, se aplicó la correción de shrinkage sobre los log₂ fold change (LFC) mediante el método apeglm. Los genes fueron clasificados como diferencialmente expresados bajo el criterio padj < 0.05 y |log₂FC| > 1 (cambio mínimo de 2 veces en expresión).
+
+De los 36, 111 genes del objeto `dds`, DESeq2 operó sobre los 23, 739 genes con conteo no nulo. De estos, excluyó 54 como outliers estadísticos (0.23% detectados mediante la prueba estadistica de Cook's) y 6, 267 adicionales por filtrado independiente de conteos bajos (media < 3 lecturas, 26% del total). Sobre los genes restantes, el `summary` con padj < 0.05 reportó 1,136 genes sobreexpresados (4.8%) y 1,114 subexpresados (4.7%).
+
+Para el análisis final se aplicó además un umbral de |log₂FC| > 1 (cambio mínimo de 2 veces), reduciendo la lista a los genes con relevancia biológica más clara:
+
+| Categoría | N genes (padj < 0.05, sin filtro LFC) | N genes (padj < 0.05 y \|LFC\| > 1) |
+|---|---|---|
+| Sobreexpresados (Up) | 1,136 | 213 |
+| Subexpresados (Down) | 1,114 | 88 |
+
+
+
+
+Al dividir 213 entre 88 se obtiene una relación Up/Down de aproximadamente 2:4:1, lo que signfica que por cada gen que estadriol apaga, activa cerca de 2.4, Esto tiene sentido biológica:ERα (receptor de estrógeno alfa) es una proteína que, al unirse al estradiol, migra al núcleo y activa la expresión de genes, por lo que es esperable que la respuesta sea predominantemente de activación.
+
+El volcano plot permite er esto visualmente de forma muy clara: la nube naranja (genes sobrexpresados) es notablement más grande y tiene puntos más altos en el eje Y que la nube azul (genes subexpresados). Cuanto más arriba está un punto, más significativo estadísticamente es ese gen.
+
+
+![Volcano Plot](imagenes/Volcano_plot.jpeg)
+
+
+
+
+Además, al revisar los 10 genes con el padj más pequeños de todo el experiemtno, 9 de ellos son genes activados por el estradiol y solo 1 es reprimido (el gen #3, con log₂FC = −2.01, es decir, ~4 veces menos expresado que en el control).
+
+### Top 10 genes más significativos
+ 
+| Rango | Gen (Ensembl ID) | log₂FC | padj | Dirección |
+|---|---|---|---|---|
+| 1 | ENSMUSG00000018339 | +4.91 | 1.28 × 10⁻²⁰⁵ | Up |
+| 2 | ENSMUSG00000030762 | +9.23 | 3.03 × 10⁻¹⁰⁹ | Up |
+| 3 | ENSMUSG00000031273 | −2.01 | 9.64 × 10⁻¹⁰⁷ | Down |
+| 4 | ENSMUSG00000043639 | +3.02 | 3.57 × 10⁻⁷⁹ | Up |
+| 5 | ENSMUSG00000039911 | +3.00 | 1.37 × 10⁻⁷⁶ | Up |
+| 6 | ENSMUSG00000070419 | +3.55 | 2.27 × 10⁻⁷⁵ | Up |
+| 7 | ENSMUSG00000049892 | +2.69 | 1.06 × 10⁻⁷³ | Up |
+| 8 | ENSMUSG00000051076 | +2.31 | 1.39 × 10⁻⁷³ | Up |
+| 9 | ENSMUSG00000031451 | +1.96 | 1.12 × 10⁻⁶⁷ | Up |
+| 10 | ENSMUSG00000031584 | +1.41 | 2.08 × 10⁻⁶² | Up |
+
+El gen con el padj más extremo (rango 1, ENSMUSG00000018339) presenta simultámente un LFC de +4.91, equivalente a ~30 veces de inducción respecto al control, constituyendo el candidato con mayor solidez estadística y biológica. El gen de rango 2 (ENSMUSG00000030762) resgistra el LFC más alto del top 10 (+9.23, ~600 veces de inducción), aunque con una expresión basal más baja, lo que se refleja en su mayor error estándar (lfcSE = 0.406) y un padj menos extremo que el gen #1. El único gen subexpresado en el top 10 es el de rango 3 (ENSMUSG00000031273, LFC = −2.01, ~4 veces de represión), cuyo padj (9.64 × 10⁻¹⁰⁷) lo posiciona entre los más significativos del experimento a pesar de tener el LFC de menor magnitud absoluta del grupo.
+
+
+----------------------------------------------------------------------
+## Análisis funcional
+
+El análisis de enriquesimiento funcional se realizó con **gProfiler2** sobre la lista de genes sobreexpresados y subexpresados por separado, consultado múltiples bases de datos (GO:BP, KEGG, REAC, TF, MIRNA, entre otras) con correción de multiples pruebas. Los resultados se visualizan en gráficas de barras ordenadas por −log₁₀(p-valor), mostrando los 40 términos más significativos para cada dirección.
+
+El Manhatan plot muestra los resultados del enriquecimiento funcional sepados por direcció de expresión y base de datos. La línea horizontal naramja represenya el umbral de significancia; los puntos por encima de ella son términos significativos.
+
+![Manhattan Plot](imagenes/Manhattan_plot.jpeg)
+
+Para los **genes subexpresados (panel superior)**, únicamente aparecen 2 puntos signficativos, ambos en la categoría GO:BP, con valores −log₁₀(padj) ≈ 2. El resto de las bases de datos (KEGG, REAC, TF, CORUM, HP, WP) no muestran ningún término por encima del umbral, lo que confirma que la represión ejercida por el estradiol es muy específica y límitada funcionalmente.
+
+
+Para los genes sobreexpresados (panel inferior), hay una nube densa de puntos naranja en GO:BP con valores entre 1 y 3, además de varios puntos azules significativos en TF y un punto en WP. Ningún termino supera −log₁₀(padj) > 3 . Juntos (la dispersión de categoria y el −log₁₀(padj) > 3) confirman que la respuesta al estradiol no se concentra en una sola ruta, sino que activa un panorama que involucra procesos biologicos, factores de transcripción, etc.
+
+
+### Genes subexpresados
+El análisis de los 88 genes subexpresados por estradiol arrojó que unicamente dos términos GO:BP son significativos: lipid transport y lipid localization. Esto sugeriría que al no haber enriquesimiento en otras categorías, la acción represora del estradiol en la próstata normal es selectiva y se concentre en la regulación del movimiento y redistribución del metabolismo lipídico como consecuencia de la activación simultánea de ruts de síntesis de esteroles mediada por el receptor de estrógeno.
+
+![GO Enrichment](imagenes/GO_subexpresados.jpeg)
+
+### Genes sobreexpresados
+
+El análisis de 213 genes sobreexpresados idenficó 40 términos GO:BP significstivos, con valores −log₁₀(p) de 2.02 y 2.66. Los terminos con mayor significancia estadísca (−log₁₀(p) = 2.66) se agrupan en cuatro categorías biológicas:
+
+1. **Detoxificación y respuesta a sustancias tóxicas**
+
+Los terminos *cellular detoxification, detoxification cellular response to toxic subtance y response to toxic subtance* encabezan la lista. Esto es consistente con la acumulación de metabolitos reactivos generados durante el catabolismo del estradiol, frente a los cuales la célula activa mecanismos de deferensa antioxidanete y eliminación de compuestos nocivos.
+
+2. **Metabolismo de lípidos, esteroles y hormonas**
+
+Los términos *lipid metabolic process, steroid metabolic process, hormone metabolic process, sterol metabolic process, cholesterol metabolic process, small molecule metabolic process y alcohol metabolic process¨*  reflejan la activación de rutas de biosíntesis y catabolismo de esteroides. Esta respuesta es coherente con el rol del estradiol como inductor de la maquinaria enzimática necesaria para la síntesis local de hormonas esteroides y para sostener la proliferación celular.
+
+
+3. **Señalización nuclear mediada por receptores**
+
+El término nuclea *receptor-mediated signaling pathway* confirma que la respuesta transcriptómica observada está directamente mediada por receptores nucleares, consistente con la activación de ERα como factor de transcipción principal. También aparecen términos de *intercellular signal transduction* y *positive regulation of response to external stimulus*, indicando una activación de señales intracelulares downstream del receptor.
+
+4. **Desarrollo de tejidos reproductivos y morfogénesis**
+
+Los terminos *multi-organism reproductive process*, *reproductive structure development*, *reproductive system development*. *protate gland epithelium morphogenesis*,*prostate gland morphogenesis*,*female gonad development*, *gonad development*, *tube morphogenesis* y *development of primary female sexual characteristics* revelan la reactiación de programas de desarrollo propios del tejido reproductivo. La presencia de términos específicos de próstata (*protate gland epithelium morphogenesis*, *prostate gland morphogenesis*) es particulamente relevantye dado el contexto experimental, y sugiere que el estradiol no solo activa rutas metabólicas sino que también redirige el tejido prostático hacia estados de remodelación estructural. Loa términos asociados con tejidos femeninos (*female pregnancy*, *ovulation cycle*, *mammary gland branching involved in pregnancy*, *development of primary female sexual characteristics*) refleja que los genes diana de ERα  son compartidos entre tejidos reproductivos de ambos sexos, dado que el receptor de estrógeno es el mismo independienteente del tejido donde se active.
+
+
+En conjunto, el perfil de enriquesimiento de los genes sobreexpreados es bastante coherente: el estradiol activa simultáneamente la señalización por ERα, el metabolismo de esteroides es necesario para sostener esa señalización, la remodelación de tejido prostático y los mecanismos de detoxificación.
+
+
+
+![GO Enrichment](imagenes/GO_sobreexpresados.jpeg)
+
+
+-----------------------------------------------------------------------
+
+## Conclusión
+
+Los resultados en conjunto muestran que el tratamiento con estradiol induce en la próstata normal una respuesta transcriptómica amplia, reproducible y biológicamente coherente. La separación limpia en el PCA confirma la calidad de los datos, la ausencia de confusores técnicos y hace innecesaria la corrección de batch effect. El análisis diferencial con DESeq2 revela una respuesta predominantemente activadora (213 genes Up vs 88 Down), con el gen más inducido alcanzando ~600 veces de sobreexpresión respecto al control. El análisis funcional muestra que el estradiol activa rutas de señalización por receptores nucleares, remodelación del tejido prostático, metabolismo de lípidos y esteroles, y detoxificación celular, mientras que su acción represora se concentra específicamente en el transporte y la localización de lípidos.
+
+
+Finalmente, en el contexto tumoral los estrógenos imitan parcialmente la respuesta transcripcional androgénica y activan vías específicas vinculadas a proliferación y reprogramación metabólica de manera dependiente de ERα, lo que sugiere un patrón que contrasta con la respuesta más moderada observada en el tejido normal del presente análisis. Esto sugiere que la carcinogénesis amplifica y redirige la señalización estrogénica hacia programas oncogénicos, siendo la alteración temprana del metabolismo lipídico observada en próstata normal un posible precursor molecular de dicha reprogramación, en concordancia con lo reportado por Lafront et al. (2024).
