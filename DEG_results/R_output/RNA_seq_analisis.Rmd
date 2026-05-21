@@ -307,7 +307,7 @@ En conjunto, el perfil de enriquesimiento de los genes sobreexpreados es bastant
 
 -----------------------------------------------------------------------
 
-## Conlusión
+## Conclusión
 
 Los resultados en conjunto muestran que el tratamiento con estradiol induce en la próstata normal una respuesta transcriptómica amplia, reproducible y biológicamente coherente. La separación limpia en el PCA confirma la calidad de los datos, la ausencia de confusores técnicos y hace innecesaria la corrección de batch effect. El análisis diferencial con DESeq2 revela una respuesta predominantemente activadora (213 genes Up vs 88 Down), con el gen más inducido alcanzando ~600 veces de sobreexpresión respecto al control. El análisis funcional muestra que el estradiol activa rutas de señalización por receptores nucleares, remodelación del tejido prostático, metabolismo de lípidos y esteroles, y detoxificación celular, mientras que su acción represora se concentra específicamente en el transporte y la localización de lípidos.
 
