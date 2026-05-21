@@ -200,3 +200,4 @@ module load kallisto/0.45.0
 
 - Richter, C. A., Taylor, J. A., Ruhlen, R. L., Welshons, W. V., & Vom Saal, F. S. (2007). Estradiol and bisphenol A stimulate androgen receptor and estrogen receptor gene expression in fetal mouse prostate mesenchyme cells. Environmental Health Perspectives, 115(6), 902–908. https://pmc.ncbi.nlm.nih.gov/articles/PMC1892114/
 
+- Dobbs, R.W., Malhotra, N.R., Greenwald, D.T. et al. Estrogens and prostate cancer. Prostate Cancer Prostatic Dis 22, 185–194 (2019). https://doi.org/10.1038/s41391-018-0081-6
