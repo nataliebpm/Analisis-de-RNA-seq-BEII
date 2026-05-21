@@ -136,7 +136,7 @@ Equipo1/
 └── TRIM_results/
 ```
 
-El repositorio principal comienza en el directorio de "Equipo1". 
+El repositorio principal comienza en el directorio de "Equipo1": `/mnt/data/bioinfo-estadistica-2/RNAseq_2026/equipos/Equipo1`
 
 Después se crearon diferentes repositorios de acuerdo a los análisis realizados: 
 
