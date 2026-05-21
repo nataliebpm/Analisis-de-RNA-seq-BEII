@@ -74,7 +74,7 @@ Se analizaron 4 réplicas biológicas de tejido de próstata de ratones para cad
 
 6. Script: `reference.sh`
 
-	- a) Descargar genomas de referencia de ratón (cdna, ncrna) de NCBI
+	- a) Descargar transcriptoma de referencia de *Mus musculus* (cdna, ncrna) de NCBI
 
 7. Script: `genome_index.sh`
 
