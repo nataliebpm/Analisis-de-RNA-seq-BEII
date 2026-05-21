@@ -42,7 +42,7 @@ Se analizaron 4 réplicas biológicas de tejido de próstata de ratones para cad
 | SRR27790676 | GSM8047486 | Próstata normal | Vehículo (control) | Control 3 | Paired-end |
 | SRR27790677 | GSM8047484 | Próstata normal | Vehículo (control) | Control 4 | Paired-end |
 
-***Enlace al reporte renderizado***: 
+***Enlace al reporte renderizado***: https://nataliebpm.github.io/Analisis-de-RNA-seq-BEII/
 
 ---
 
