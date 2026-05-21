@@ -192,3 +192,9 @@ module load kallisto/0.45.0
 ## 📚 Referencias
 
 - Lafront, C., Germain, L., & Audet-Walsh, É. (2024). Bulk mRNA-seq data from wild-type and prostate cancer-developing mice reveal a reprogramming of the estrogen and androgen responses after carcinogenesis. *Data in Brief*, *57*, 110870. https://doi.org/10.1016/j.dib.2024.110870
+
+- Ramírez-de-Arellano, A., Pereira-Suárez, A. L., Rico-Fuentes, C., López-Pulido, E. I., Villegas-Pineda, J. C., & Sierra-Diaz, E. (2022). Distribution and effects of estrogen receptors in prostate cancer: Associated molecular mechanisms. Frontiers in Endocrinology, 12, 811578. https://doi.org/10.3389/fendo.2021.811578
+
+- Belluti, S., Imbriano, C., & Casarini, L. (2023). Nuclear estrogen receptors in prostate cancer: From genes to function. Cancers, 15(18), 4653. https://doi.org/10.3390/cancers15184653
+
+- Richter, C. A., Taylor, J. A., Ruhlen, R. L., Welshons, W. V., & Vom Saal, F. S. (2007). Estradiol and bisphenol A stimulate androgen receptor and estrogen receptor gene expression in fetal mouse prostate mesenchyme cells. Environmental Health Perspectives, 115(6), 902–908. https://doi.org/10.1289/ehp.9804
